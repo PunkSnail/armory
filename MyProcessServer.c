@@ -40,7 +40,7 @@ void Service(int cfd)
 
         write(1, buf, ret);
         //回写客户端
-        //write(cfd, buf, ret);
+        write(cfd, buf, ret);
     }
 }
 
