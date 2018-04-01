@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <mysql/mysql.h>
@@ -169,6 +170,10 @@ query_resource_t *query_single_content(mysql_connect_t *p_mysql_con,
     
     MYSQL_ROW mysql_row = mysql_fetch_row(mysql_result);
 
+    if(NULL == mysql_row) {
+        *p_member_count = 0;
+        return NULL;
+    }
     *p_member_count = field_count;
     *ppp_member = (const char**)mysql_row;
 
