@@ -199,7 +199,8 @@ query_resource_t *query_multi_content(mysql_connect_t *p_mysql_con,
     } 
     *p_result_count = (uint64_t)mysql_num_rows(mysql_result);
     
-    multi_result_t *multi_result_array = (multi_result_t*)calloc(*p_result_count, sizeof(multi_result_t));
+    multi_result_t *multi_result_array = 
+        (multi_result_t*)calloc((size_t)*p_result_count, sizeof(multi_result_t));
 
     if(NULL == multi_result_array) {
         mysql_free_result(mysql_result);
