@@ -15,8 +15,6 @@
 extern "C" {
 #endif
 
-#define MAX_URL_LEN 1024
-
 typedef enum 
 {
     UPLOAD_TYPE_BUF = 1,

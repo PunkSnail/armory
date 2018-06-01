@@ -220,7 +220,6 @@ static void multi_read_return(upload_handler_t *p_upload)
     int     msgs_left       = 0;
     int     http_code       = 0;
     CURLMsg *multi_msg      = NULL;
-    //bool flag               = false;        
     
     while((multi_msg = curl_multi_info_read(p_upload->curl_m, &msgs_left)))
     {
@@ -291,8 +290,7 @@ LIB_PUBLIC void run_upload(upload_handler_t *p_upload)
             
             common_upload(p_upload, p_active_info, p_cb_param);
         }
-        usleep(500000); // 0.5s
-        //debug_print("- - - BIG UPLOAD LOOP RUN - - -\n");
+        usleep(200000); // 0.2s
     }
 }
 
