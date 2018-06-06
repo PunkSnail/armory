@@ -6,13 +6,12 @@
 
 #ifdef _DEBUG
 
-#define DEBUG_PRINT(...)\
+#define DEBUG_PRINT(fmt, args...)\
     do{\
-        fprintf(stderr, "%s:%d ", __FILE__, __LINE__);\
-        fprintf(stderr, __VA_ARGS__);\
+        printf("%s:%d "fmt, __FILE__, __LINE__, ##args);\
     }while(0)
 
-#define debug_print(...) do{ fprintf(stderr, __VA_ARGS__); }while(0)
+#define debug_print(...) do{ printf(__VA_ARGS__); }while(0)
 
 #else /* _DEBUG */
 
