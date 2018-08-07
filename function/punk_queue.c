@@ -42,7 +42,7 @@ punk_queue_t* create_punk_queue(uint32_t capacity)
     result->priv_array = (queue_item_t*)calloc(capacity, sizeof(queue_item_t));
     
     if (NULL == result->priv_array) {
-#ifdef _DEbug
+#ifdef _DEBUG
         perror("create_punk_queue calloc error");
 #endif
         free (result);
@@ -93,16 +93,6 @@ uint32_t get_queue_size(punk_queue_t *p_queue)
 
     return p_queue->size;
 }
-
-/* void traverse_queue(punk_queue_t *p_queue, queue_traverse_t cb, void *cb_param) */
-/* { */
-/*     if (NULL == p_queue || NULL == cb) { */
-/*         return; */
-/*     } */
-/*     for (uint32_t i = 0; i < p_queue->size; i++) { */
-/*         cb(p_queue->priv_array[i], cb_param); */
-/*     } */
-/* } */
 
 void destroy_punk_queue(punk_queue_t *p_queue)
 {
