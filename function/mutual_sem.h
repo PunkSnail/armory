@@ -8,7 +8,7 @@
  * 用于进程同步 通常与共享内存搭配使用
  * */
 
-#ifdef __cpluscplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -27,7 +27,7 @@ void mutual_wait(int semid);
 
 void mutual_sig(int semid);
 
-#ifdef __cpluscplus
+#ifdef __cplusplus
 }
 #endif
 
