@@ -21,7 +21,7 @@ void insert_sort(int *array, int len);
 /* average: O(nlogn)    best: O(nlogn)  worst: O(n^2) */
 void quick_sort(int *array, int len);
 
-/* average: O(nlog2n)   best: O(nlogn)  worst: O(n^2) */
+/* best: O(nlogn)  worst: O(n^2) */
 void shell_sort(int *array, int len);
 
 /* average: O(nlogn)    best: O(nlogn)  worst: O(nlogn) */
