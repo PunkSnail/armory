@@ -33,7 +33,7 @@ void select_sort(int *array, int len)
     {
         min_index = i;
 
-        for (j = i; j < len; j++)
+        for (j = i + 1; j < len; j++)
         {
             if (array[j] < array[min_index]) {
                 min_index = j;
@@ -51,15 +51,12 @@ void insert_sort(int *array, int len)
 
     for (i = 1; i < len; i++)
     {
-        if (array[i] < array[i - 1])
-        {
-            tmp = array[i];
-            
-            for (j = i - 1; j >= 0 && tmp < array[j]; j--) {
-                array[j + 1] = array[j];
-            }
-            array[j + 1] = tmp;
+        tmp = array[i];
+
+        for (j = i; j > 0 && tmp < array[j - 1]; j--) {
+            array[j] = array[j - 1];
         }
+        array[j] = tmp;
     }
 }
 
@@ -129,7 +126,7 @@ void quick_sort(int *array, int len)
     quick_recursion(array, 0, len - 1);
 }
 
-static void merge(int *array, int start, int end, int mid, int *assist_array)
+static void merge(int *array, int start, int end, int mid, int *assist)
 {
     int i_start = start;
     int i_end   = mid;
@@ -141,56 +138,56 @@ static void merge(int *array, int start, int end, int mid, int *assist_array)
     {
         if (array[i_start] < array[j_start])
         {
-            assist_array[index] = array[i_start];
+            assist[index] = array[i_start];
             i_start++;
         }
         else{
-            assist_array[index] = array[j_start];
+            assist[index] = array[j_start];
             j_start++;
         }
         index++;
     }
     while (i_start <= i_end)
     {
-        assist_array[index] = array[i_start];
+        assist[index] = array[i_start];
         i_start++;
         index++;
     }
     while (j_start <= j_end)
     {
-        assist_array[index] = array[j_start];
+        assist[index] = array[j_start];
         j_start++;
         index++;
     }
     for (int i = 0; i < index; i++) {
-        array[start + i] = assist_array[i];
+        array[start + i] = assist[i];
     }
 }
 
-static void merge_recursion(int *array, int start, int end, int *assist_array)
+static void merge_recursion(int *array, int start, int end, int *assist)
 {
     if (start == end) {
         return;
     }
     int mid = (start + end) / 2;
     
-    merge_recursion(array, start, mid, assist_array);
+    merge_recursion(array, start, mid, assist);
     
-    merge_recursion(array, mid + 1, end, assist_array);
+    merge_recursion(array, mid + 1, end, assist);
     
-    merge(array, start, end, mid, assist_array);
+    merge(array, start, end, mid, assist);
 }
 
 void merge_sort(int *array, int len)
 {
-    int *assist_array = (int*)calloc((size_t)len, sizeof(int));
+    int *assist = (int*)calloc((size_t)len, sizeof(int));
 
-    if (NULL == assist_array)
+    if (NULL == assist)
         return;
 
-    merge_recursion(array, 0, len -1, assist_array);
+    merge_recursion(array, 0, len -1, assist);
 
-    free(assist_array);
-    assist_array = NULL;
+    free(assist);
+    assist = NULL;
 }
 
