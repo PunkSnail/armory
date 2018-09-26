@@ -1,6 +1,6 @@
 
-#ifndef BORING_TOOLS_HHH
-#define BORING_TOOLS_HHH
+#ifndef BORING_TOOLS_HH
+#define BORING_TOOLS_HH
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -11,4 +11,4 @@
 void show_fake_bits(const void *p_value, uint32_t value_len, bool order);
 
 
-#endif /* BORING_TOOLS_HHH */
+#endif /* BORING_TOOLS_HH */
