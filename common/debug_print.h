@@ -1,6 +1,6 @@
 
-#ifndef DEBUG_PRINT_HHH
-#define DEBUG_PRINT_HHH
+#ifndef DEBUG_PRINT_HH
+#define DEBUG_PRINT_HH
 
 #include <stdio.h>
 
@@ -22,4 +22,4 @@
 #endif /* _DEBUG */
 
 
-#endif /* DEBUG_PRINT_HHH */
+#endif /* DEBUG_PRINT_HH */
