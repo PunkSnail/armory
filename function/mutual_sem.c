@@ -58,24 +58,10 @@ int create_producer_semid(void)
     }  
     mutual_sem_t mutual_sem;
     memset(&mutual_sem, 0, sizeof(mutual_sem_t));
-#if 1    
+    
     mutual_sem.val = 1;
     result = semctl(semid, 0, SETVAL, mutual_sem);
-#else
-    mutual_sem.val = 1;
-    if (semctl(semid, 0, SETVAL, mutual_sem) < 0) {
-        perror("semctl failed");  
-    }  
-    mutual_sem.val = 0;
-    if (semctl(semid, 1, SETVAL, mutual_sem) < 0) {  
-        perror("semctl failed");  
-        exit(1);  
-    }  
-    mutual_sem.val = 1;
-    if (semctl(semid, 2, SETVAL, mutual_sem) < 0) {
-        perror("semctl failed");  
-    }  
-#endif
+    
     if (-1 == result) {  
 #ifdef _DEBUG
         perror("semctl error");  
