@@ -6,18 +6,21 @@
 
 #ifdef _DEBUG
 
-#define DEBUG_PRINT(fmt, args...)\
-    do{\
-        printf("%s:%d "fmt, __FILE__, __LINE__, ##args);\
-    } while(0)
+#define DEBUG_PRINT(fmt, args...) \
+{ \
+    printf("%s:%d "fmt, __FILE__, __LINE__, ##args); \
+}
 
-#define debug_print(...) do{ printf(__VA_ARGS__); } while(0)
+#define debug_print(...) \
+{ \
+    printf(__VA_ARGS__); \
+}
 
 #else /* _DEBUG */
 
-#define DEBUG_PRINT(...) do{ } while(0)
+#define DEBUG_PRINT(...) { }
 
-#define debug_print(...) do{ } while(0)
+#define debug_print(...) { }
 
 #endif /* _DEBUG */
 
