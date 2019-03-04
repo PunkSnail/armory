@@ -75,6 +75,8 @@ void test_link_list(int argc, char *argv[])
     
     list_pop_back(p_list);
     
+    list_ptr_remove(p_list, &p3);
+    
     traversal_list(p_list, callback, "====");
 
     destroy_link_list(p_list);

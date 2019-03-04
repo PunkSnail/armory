@@ -1,9 +1,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "link_list.h"
 
+/* normal list */
 #ifndef LINUX_LIST
 
 typedef struct link_node
@@ -107,6 +109,44 @@ int list_push_back(link_list_t *p_list, void *data)
 }
 #endif  /* LINUX_LIST */
 
+int list_ptr_remove(link_list_t *p_list, void *ptr)
+{
+    int result = -1;
+
+    if (NULL == p_list || NULL == ptr) {
+        return result;
+    }
+    link_node_t **walk = &(p_list->head.next);
+
+#ifdef LINUX_LIST
+    while (*walk && *walk != ptr)
+       walk = &(*walk)->next;
+
+    if (*walk)
+    {
+        *walk = ((link_node_t*)ptr)->next;
+        
+        p_list->size--;
+        result = 0;
+    }
+#else
+    while (*walk && (*walk)->data != ptr)
+       walk = &(*walk)->next;
+
+    if (*walk)
+    {
+        link_node_t *p_del = *walk;
+        *walk = p_del->next;
+        free(p_del);
+        
+        p_list->size--;
+        result = 0;
+    }
+#endif /* LINUX_LIST */
+    return result;
+}
+
+
 int list_pos_remove(link_list_t *p_list, int pos)
 {
     int result = -1;
@@ -123,6 +163,7 @@ int list_pos_remove(link_list_t *p_list, int pos)
     link_node_t *p_del = p_node->next;
 
     p_node->next = p_del->next;
+/* normal list */
 #ifndef LINUX_LIST
     free(p_del);
 #endif
@@ -190,6 +231,7 @@ void destroy_link_list(link_list_t *p_list)
     if (NULL == p_list) {
         return;
     }
+/* normal list */
 #ifndef LINUX_LIST
     link_node_t *p_node = p_list->head.next;
     link_node_t *p_next = NULL;

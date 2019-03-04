@@ -42,6 +42,8 @@ int list_push_back(link_list_t *p_list, void *data);
 
 #endif  /* LINUX_LIST */
 
+int list_ptr_remove(link_list_t *p_list, void *ptr);
+
 /* start at index 1 */
 int list_pos_remove(link_list_t *p_list, int pos);
 
