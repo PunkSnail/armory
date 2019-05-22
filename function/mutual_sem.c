@@ -2,11 +2,20 @@
 #include <stdlib.h>  
 #include <stdio.h>  
 #include <string.h>  
+#include <errno.h>  
 #include <sys/ipc.h>
 #include <sys/sem.h>  
 
 #include "mutual_sem.h"
- 
+
+
+#ifdef _DEBUG
+#define debug_print(...) { printf(__VA_ARGS__); }
+#else
+#define debug_print(...) { }
+#endif /* _DEBUG */
+
+
 typedef union
 {
     int             val;
@@ -23,9 +32,7 @@ void mutual_wait(int semid)
     sem.sem_flg = SEM_UNDO;
     
     if (-1 == semop(semid, &sem, 1)) {
-#ifdef _DEBUG
-        perror("mutual_wait failed");
-#endif
+        debug_print("%s failed: %s\n", __func__, strerror(errno));
     }  
 }
 
@@ -37,9 +44,7 @@ void mutual_sig(int semid)
     sem.sem_flg = SEM_UNDO;  
     
     if (-1 == semop(semid, &sem, 1)) {
-#ifdef _DEBUG        
-        perror("mutual_sig failed");  
-#endif
+        debug_print("%s failed: %s\n", __func__, strerror(errno));
     }  
 }
 
@@ -50,10 +55,9 @@ int create_producer_semid(void)
     int result = -1;
     int semid = semget(MUTUAL_SEM_KEY, 1, IPC_CREAT | 0666);
     
-    if (-1 == semid) {
-#ifdef _DEBUG
-        perror("semget error");  
-#endif
+    if (-1 == semid)
+    {
+        debug_print("%s semget error: %s\n", __func__, strerror(errno));
         return result;
     }  
     mutual_sem_t mutual_sem;
@@ -62,10 +66,9 @@ int create_producer_semid(void)
     mutual_sem.val = 1;
     result = semctl(semid, 0, SETVAL, mutual_sem);
     
-    if (-1 == result) {  
-#ifdef _DEBUG
-        perror("semctl error");  
-#endif
+    if (-1 == result)
+    {  
+        debug_print("%s semctl error: %s\n", __func__, strerror(errno));
         return result;
     }
     result = semid;
@@ -75,9 +78,7 @@ int create_producer_semid(void)
 void destroy_producer_semid(int semid)
 {
     if (-1 == semctl(semid, 0, IPC_RMID)) {
-#ifdef _DEBUG
-        perror("semctl error");  
-#endif
+        debug_print("%s semctl error: %s\n", __func__, strerror(errno));
     }
 }
 
@@ -86,9 +87,7 @@ int create_consumer_semid(void)
     int result = semget(MUTUAL_SEM_KEY, 1, 0);
     
     if (-1 == result) {  
-#ifdef _DEBUG
-        perror("semget error");  
-#endif
+        debug_print("%s semget error: %s\n", __func__, strerror(errno));
     }  
     return result;
 }
