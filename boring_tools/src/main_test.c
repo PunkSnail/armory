@@ -5,12 +5,13 @@
 void test_show_fake_bits(void)
 {
     uint32_t value = 3;
+    printf("uint32_t \"%u\" reverse order:\n", value);
     show_fake_bits(&value, sizeof(value), false);
     
-    printf("----------------------\n");
     char buf[10] = "abc";
 
-    show_fake_bits(buf, 10, true);
+    printf("string \"%s\" memory order:\n", buf);
+    show_fake_bits(buf, sizeof(buf), true);
 }
 
 int main(int argc, char *argv[])
