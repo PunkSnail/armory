@@ -32,35 +32,65 @@ using namespace std;
     printf("\033[1;32;1m" fmt "\033[m",  ##args); \
 }
 
+typedef enum
+{
+    FORMAT_ADD_SPACE,
+    FORMAT_EAT_SPACE,
+
+}fomat_type_t;
+
+typedef void (*deal_with_line_t) (string &line);
+
 struct format_officer_t
 {
 public:
     format_officer_t();
     ~format_officer_t();
-    bool write_format_file(void);
+
+    int load_target_file(const char *p_path);
+    bool save_to_file(const char *p_path);
 
     vector <string> line_vec;
-    string format_file;
 };
 
-format_officer_t::format_officer_t()
-{
-    this->format_file = "format_";
-}
+format_officer_t::format_officer_t() {  }
 
 format_officer_t::~format_officer_t() {  }
 
-bool format_officer_t::write_format_file(void)
+int format_officer_t::load_target_file(const char *p_path)
+{
+    int result = -1;
+    filebuf fb;
+    string line;
+
+    if(fb.open(p_path, ios::in) == NULL)
+    {
+        show_red("open error: %s\n", strerror(errno));
+        return result;
+    }
+    istream file_stream(&fb);
+
+    while (getline(file_stream, line, '\n'))
+    {
+        this->line_vec.push_back(line);
+    }
+    fb.close();
+
+    result = 0;
+    return result;
+}
+
+bool format_officer_t::save_to_file(const char *p_path)
 {
     bool result = false;
     fstream file_stream;
-   
+
     if (this->line_vec.empty())
     {
         show_red("nothing to write\n");
         return result;
     }
-    file_stream.open(this->format_file, ios::out);
+    file_stream.open(p_path, ios::out);
     if (!file_stream)
     {
         show_red("%s open error: %s\n", __func__, strerror(errno));
@@ -76,7 +106,7 @@ bool format_officer_t::write_format_file(void)
     return result;
 }
 
-static bool is_invalid_param(const char *path)
+static bool is_invalid_path(const char *path)
 {
     bool result = true;
     struct stat st;
@@ -99,7 +129,7 @@ static bool is_invalid_param(const char *path)
     }
     if (st.st_size > MAXIMUM_FILE_SIZE)
     {
-        show_red("target file too big, current limit: %u\n", MAXIMUM_FILE_SIZE);
+        show_red("file size exceeds the limit: %u\n", MAXIMUM_FILE_SIZE);
         return result;
     }
     result = false;
@@ -107,37 +137,15 @@ static bool is_invalid_param(const char *path)
     return result;
 }
 
-static int load_target_file(const char *path, format_officer_t *p_officer)
-{
-    int result = -1;
-    filebuf fb;
-    string line;
-
-    if(fb.open(path, ios::in) == NULL)
-    {
-        show_red("open error: %s\n", strerror(errno));
-        return result;
-    }
-    istream file_stream(&fb);
-
-    while (getline(file_stream, line, '\n'))
-    {
-        p_officer->line_vec.push_back(line);
-    }
-    fb.close();
-
-    result = 0;
-    return result;
-}
-
-void deal_with_line(string &line)
+static void add_line_space(string &line)
 {
     for (size_t i = 1; i < line.size(); i++)
     {
-        if (!IS_CH(line[i])) {
+        if (!IS_CH(line[i]))
+        {
             continue;
         }
-        if (' ' != line[i - 1])
+        if (' ' != line[i - 1] && 1 != i)
         {
             line.insert(i, 1, ' ');
         }
@@ -152,58 +160,106 @@ void deal_with_line(string &line)
     }
 }
 
-void format_each_line(format_officer_t *p_officer)
+void eat_trailing_space(string &line)
 {
-    size_t line_num = p_officer->line_vec.size();
-
-    for (size_t i = 0; i < line_num; i++)
+    for (int i = (int)line.length() - 1; i >= 0; i--)
     {
-        deal_with_line(p_officer->line_vec[i]);
+        if (' ' == line[i] || '\t' == line[i])
+        {
+            line.pop_back();
+            continue;
+        }
+        break;
     }
 }
 
-int formatted_text(const char *text_path)
+static bool
+format_each_line(format_officer_t *p_format, fomat_type_t type)
 {
-    int result = -1;
-    size_t pos;
-    string name;
-    format_officer_t *p_officer = new format_officer_t;
+    size_t line_num = p_format->line_vec.size();
+    deal_with_line_t line_func = NULL;
 
-    if (is_invalid_param(text_path)) {
-        goto done;
-    }
-    show("text path: ");
-    show_green("%s\n", text_path);
-
-    if (0 != load_target_file(text_path, p_officer))
+    switch (type)
     {
-        show_red("error reading file into memory: %s\n", strerror(errno));
-        goto done;
+    case FORMAT_ADD_SPACE:
+        line_func = add_line_space;
+        break;
+    case FORMAT_EAT_SPACE:
+        line_func = eat_trailing_space;
+        break;
+    default:
+        return false;
     }
-    format_each_line(p_officer);
-
-    name = text_path;
-
-    if (string::npos != (pos = name.rfind('/')))
+    for (size_t i = 0; i < line_num; i++)
     {
-        name.insert(pos + 1, p_officer->format_file);
+        line_func(p_format->line_vec[i]);
     }
-    else {
-        name = p_officer->format_file + text_path;
-    }
-    p_officer->format_file = name;
+    return true;
+}
 
-    if (true == p_officer->write_format_file())
+static bool
+read_and_backup(format_officer_t *p_format, const char *p_path)
+{
+    bool result = false;
+
+    string backup_path = p_path;
+    backup_path += ".bak";
+
+    if (0 != p_format->load_target_file(p_path))
     {
-        show("save to: ");
-        show_green("%s\n", p_officer->format_file.c_str());
+        show_red("error reading file: %s\n", strerror(errno));
+        return result;
     }
-done:
-    if (p_officer)
+    /* backup */
+    if (true == p_format->save_to_file(backup_path.c_str()))
     {
-        delete p_officer;
-        p_officer = NULL;
+        show("backup to: ");
+        show_green("\t%s\n", backup_path.c_str());
+
+        result = true;
     }
     return result;
 }
 
+static bool formatted_text_inline(const char *p_path, fomat_type_t type)
+{
+    bool result = false;
+
+    format_officer_t *p_format = new format_officer_t;
+
+    if (is_invalid_path(p_path))
+    {
+        goto done;
+    }
+    show("input path: ");
+    show_green("\t%s\n", p_path);
+
+    if (false == read_and_backup(p_format, p_path))
+    {
+        goto done;
+    }
+    if (format_each_line(p_format, type) &&
+        p_format->save_to_file(p_path))
+    {
+        show("save to: ");
+        show_green("\t%s\n", p_path);
+        result = true;
+    }
+done:
+    if (p_format)
+    {
+        delete p_format;
+        p_format = NULL;
+    }
+    return result;
+}
+
+bool formatted_text(const char *p_path)
+{
+    return formatted_text_inline(p_path, FORMAT_ADD_SPACE);
+}
+
+bool eat_trailing_space(const char *p_path)
+{
+    return formatted_text_inline(p_path, FORMAT_EAT_SPACE);
+}
