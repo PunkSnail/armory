@@ -15,5 +15,7 @@
  */
 void show_fake_bits(const void *p_value, uint32_t value_len, bool order);
 
+/* the return content will be rewritten on the next call */
+const char *format_flot_result(double num);
 
 #endif /* BORING_TOOLS_HH */

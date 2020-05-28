@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <string.h>
 
 #include "boring_tools.h"
 
@@ -41,5 +42,21 @@ reverse_order:
         putchar(' ');
     }
     printf("\n");
+}
+
+const char *format_flot_result(double num)
+{
+    static char res[1024] = { 0 };
+    res[0] = '\0';
+
+    snprintf(res, sizeof(res), "%f", num);
+
+    int i = (int)strlen(res); /* the length will be greater than zero. */
+
+    while (--i && ('0' == res[i] || '.' == res[i]))
+    {
+        res[i] = '\0';
+    }
+    return res;
 }
 

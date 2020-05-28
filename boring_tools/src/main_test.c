@@ -4,12 +4,19 @@
 
 #define line() printf("\n------------------------------\n");
 
+void test_flot_result(void)
+{
+    double num = 3.14;
+    printf("floating-point number:\t%f\n", num);
+    printf("format_flot_result:\t%s\n", format_flot_result(num));
+}
+
 void test_show_fake_bits(void)
 {
     uint32_t value = 3;
     printf("uint32_t \"%u\" reverse order:\n", value);
     show_fake_bits(&value, sizeof(value), false);
-    
+
     char buf[] = "abc";
 
     printf("string \"%s\" memory order:\n", buf);
@@ -35,6 +42,8 @@ int main(int argc, char *argv[])
     test_swp_ptr();
     line();
     test_show_fake_bits();
+    line();
+    test_flot_result();
 
     return 0;
 }
