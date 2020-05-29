@@ -32,12 +32,6 @@ using namespace std;
     printf("\033[1;32;1m" fmt "\033[m",  ##args); \
 }
 
-typedef enum
-{
-    FORMAT_ADD_SPACE,
-    FORMAT_EAT_SPACE,
-
-}fomat_type_t;
 
 typedef void (*deal_with_line_t) (string &line);
 
@@ -51,9 +45,13 @@ public:
     bool save_to_file(const char *p_path);
 
     vector <string> line_vec;
+    bool backup;
 };
 
-format_officer_t::format_officer_t() {  }
+format_officer_t::format_officer_t()
+{
+    this->backup = true;
+}
 
 format_officer_t::~format_officer_t() {  }
 
@@ -93,7 +91,7 @@ bool format_officer_t::save_to_file(const char *p_path)
     file_stream.open(p_path, ios::out);
     if (!file_stream)
     {
-        show_red("%s open error: %s\n", __func__, strerror(errno));
+        show_red("%s open error: %s\n", p_path, strerror(errno));
         return result;
     }
     for (size_t i = 0; i < this->line_vec.size(); i++)
@@ -211,7 +209,11 @@ read_and_backup(format_officer_t *p_format, const char *p_path)
         return result;
     }
     /* backup */
-    if (true == p_format->save_to_file(backup_path.c_str()))
+    if (false == p_format->backup)
+    {
+        result = true;
+    }
+    else if (p_format->save_to_file(backup_path.c_str()))
     {
         show("backup to: ");
         show_green("\t%s\n", backup_path.c_str());
@@ -221,28 +223,34 @@ read_and_backup(format_officer_t *p_format, const char *p_path)
     return result;
 }
 
-static bool formatted_text_inline(const char *p_path, fomat_type_t type)
+bool formatting_file(const char *p_path, const char *p_save_path,
+                     fomat_type_t type, bool backup)
 {
     bool result = false;
 
     format_officer_t *p_format = new format_officer_t;
+    p_format->backup = backup;
 
-    if (is_invalid_path(p_path))
+    if (FORMAT_UNDEFINED == type || is_invalid_path(p_path))
     {
         goto done;
     }
     show("input path: ");
     show_green("\t%s\n", p_path);
 
+    if (NULL == p_save_path)
+    {
+        p_save_path = p_path;
+    }
     if (false == read_and_backup(p_format, p_path))
     {
         goto done;
     }
     if (format_each_line(p_format, type) &&
-        p_format->save_to_file(p_path))
+        p_format->save_to_file(p_save_path))
     {
         show("save to: ");
-        show_green("\t%s\n", p_path);
+        show_green("\t%s\n", p_save_path);
         result = true;
     }
 done:
@@ -254,12 +262,3 @@ done:
     return result;
 }
 
-bool formatted_text(const char *p_path)
-{
-    return formatted_text_inline(p_path, FORMAT_ADD_SPACE);
-}
-
-bool eat_trailing_space(const char *p_path)
-{
-    return formatted_text_inline(p_path, FORMAT_EAT_SPACE);
-}

@@ -11,11 +11,17 @@
 extern "C" {
 #endif
 
-/* formatted text file */
-bool formatted_text(const char *p_path);
+typedef enum
+{
+    FORMAT_ADD_SPACE, /* formatted text file */
+    FORMAT_EAT_SPACE, /* eat the space at the end of a line */
 
-/* eat the space at the end of a line */
-bool eat_trailing_space(const char *p_path);
+    FORMAT_UNDEFINED,
+
+}fomat_type_t;
+
+bool formatting_file(const char *p_path, const char *p_save_path,
+                     fomat_type_t type, bool backup);
 
 #ifdef __cplusplus
 }
