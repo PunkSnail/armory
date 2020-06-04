@@ -56,28 +56,11 @@ format_officer_t::format_officer_t()
 
 format_officer_t::~format_officer_t() {  }
 
-static bool is_elf_head(const char *buf)
-{
-    bool result = false;
-
-    Elf64_Ehdr *p_elf_head = (Elf64_Ehdr*)buf;
-
-    if (p_elf_head->e_ident[0] == ELFMAG0 &&
-        p_elf_head->e_ident[1] == ELFMAG1 &&
-        p_elf_head->e_ident[2] == ELFMAG2 &&
-        p_elf_head->e_ident[3] == ELFMAG3)
-    {
-        result = true;
-    }
-    return result;
-}
-
 int format_officer_t::load_target_file(const char *p_path)
 {
     int result = -1;
     filebuf fb;
     string line;
-    bool first_line = true;
 
     if(fb.open(p_path, ios::in) == NULL)
     {
@@ -88,21 +71,11 @@ int format_officer_t::load_target_file(const char *p_path)
 
     while (getline(file_stream, line, '\n'))
     {
-        if (first_line)
-        {
-            if (is_elf_head(line.c_str()))
-            {
-                show_red("this file type is not supported\n");
-                goto load_end;
-            }
-            first_line = true;
-        }
         this->line_vec.push_back(line);
     }
-    result = 0;
-load_end:
     fb.close();
 
+    result = 0;
     return result;
 }
 
@@ -132,6 +105,30 @@ bool format_officer_t::save_to_file(const char *p_path)
     return result;
 }
 
+static bool file_is_elf(const char *path)
+{
+    bool result = false;
+
+    Elf64_Ehdr elf_head;
+
+    FILE *rfp = fopen(path, "rb");
+
+    if (NULL == rfp || 0 == fread(&elf_head, 1, sizeof(Elf64_Ehdr), rfp))
+    {
+        show_red("%s: %s\n", __func__, strerror(errno));
+    }
+    if (elf_head.e_ident[0] == ELFMAG0 &&
+        elf_head.e_ident[1] == ELFMAG1 &&
+        elf_head.e_ident[2] == ELFMAG2 &&
+        elf_head.e_ident[3] == ELFMAG3)
+    {
+        result = true;
+    }
+    fclose(rfp);
+
+    return result;
+}
+
 static bool is_invalid_path(const char *path)
 {
     bool result = true;
@@ -148,23 +145,27 @@ static bool is_invalid_path(const char *path)
         return result;
     }
     stat(path, &st);
+
     if (S_ISDIR(st.st_mode))
     {
         show_red("the target path is a directory: %s\n", path);
-        return result;
     }
-    if (!S_ISREG(st.st_mode))
+    else if (!S_ISREG(st.st_mode))
     {
         show_red("the file is not a regular file\n");
-        return result;
     }
-    if (st.st_size > MAXIMUM_FILE_SIZE)
+    else if (st.st_size > MAXIMUM_FILE_SIZE)
     {
         show_red("file size exceeds the limit: %u\n", MAXIMUM_FILE_SIZE);
-        return result;
     }
-    result = false;
-
+    else if ((size_t)st.st_size > sizeof(Elf64_Ehdr) && file_is_elf(path))
+    {
+        show_red("this file type is not supported\n");
+    }
+    else
+    {
+        result = false;
+    }
     return result;
 }
 
