@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <unistd.h>     /* access ... */
 #include <sys/stat.h>   /* stat */
+#include <elf.h>        /* Elf64_Ehdr */
 
 #include <vector>
 #include <string>
@@ -55,11 +56,28 @@ format_officer_t::format_officer_t()
 
 format_officer_t::~format_officer_t() {  }
 
+static bool is_elf_head(const char *buf)
+{
+    bool result = false;
+
+    Elf64_Ehdr *p_elf_head = (Elf64_Ehdr*)buf;
+
+    if (p_elf_head->e_ident[0] == ELFMAG0 &&
+        p_elf_head->e_ident[1] == ELFMAG1 &&
+        p_elf_head->e_ident[2] == ELFMAG2 &&
+        p_elf_head->e_ident[3] == ELFMAG3)
+    {
+        result = true;
+    }
+    return result;
+}
+
 int format_officer_t::load_target_file(const char *p_path)
 {
     int result = -1;
     filebuf fb;
     string line;
+    bool first_line = true;
 
     if(fb.open(p_path, ios::in) == NULL)
     {
@@ -70,11 +88,21 @@ int format_officer_t::load_target_file(const char *p_path)
 
     while (getline(file_stream, line, '\n'))
     {
+        if (first_line)
+        {
+            if (is_elf_head(line.c_str()))
+            {
+                show_red("this file type is not supported\n");
+                goto load_end;
+            }
+            first_line = true;
+        }
         this->line_vec.push_back(line);
     }
+    result = 0;
+load_end:
     fb.close();
 
-    result = 0;
     return result;
 }
 
@@ -123,6 +151,11 @@ static bool is_invalid_path(const char *path)
     if (S_ISDIR(st.st_mode))
     {
         show_red("the target path is a directory: %s\n", path);
+        return result;
+    }
+    if (!S_ISREG(st.st_mode))
+    {
+        show_red("the file is not a regular file\n");
         return result;
     }
     if (st.st_size > MAXIMUM_FILE_SIZE)
@@ -205,7 +238,7 @@ read_and_backup(format_officer_t *p_format, const char *p_path)
 
     if (0 != p_format->load_target_file(p_path))
     {
-        show_red("error reading file: %s\n", strerror(errno));
+        show_red("error reading file\n");
         return result;
     }
     /* backup */
