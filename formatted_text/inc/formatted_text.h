@@ -3,6 +3,7 @@
 #define FORMATTED_TEXT_HH
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /* 10M text file size limit */
 #define MAXIMUM_FILE_SIZE   10485760
@@ -11,17 +12,30 @@
 extern "C" {
 #endif
 
-typedef enum
-{
-    FORMAT_ADD_SPACE, /* formatted text file */
-    FORMAT_EAT_SPACE, /* eat the space at the end of a line */
+typedef uint32_t fomat_flags_t;
+typedef struct format_officer format_officer_t;
 
-    FORMAT_UNDEFINED,
+#define FORMAT_UNDEFINED    0
 
-}fomat_type_t;
+/* Insert spaces between text */
+#define FORMAT_ADD_SPACE    (1 << 1)
+/* eat the space at the end of a line */
+#define FORMAT_EAT_SPACE    (1 << 2)
 
-bool formatting_file(const char *p_path, const char *p_save_path,
-                     fomat_type_t type, bool backup);
+#define FORMAT_FMT_CHECK    (1 << 29)
+#define FORMAT_UNDISPLAY    (1 << 30)
+#define FORMAT_TO_BACKUP    (1 << 31)
+
+format_officer_t *format_officer_create();
+
+bool formatting_check(format_officer_t *p_format,
+                      const char *p_path, fomat_flags_t flags);
+
+bool formatting_file(format_officer_t *p_format,
+                     const char *p_path, const char *p_save_path,
+                     fomat_flags_t flags);
+
+void format_officer_destroy(format_officer_t *p_format);
 
 #ifdef __cplusplus
 }
