@@ -10,7 +10,7 @@
 #elif defined(WIN32)
 
 #define LIB_PUBLIC __declspec(dllexport)
-#define LIB_LOCAL 
+#define LIB_LOCAL
 
 #endif
 

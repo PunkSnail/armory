@@ -14,9 +14,10 @@ void *open_library(const char *p_lib_path, ...)
     if (NULL != p_lib_path)
     {
         va_list args;
-        va_start(args, p_lib_path); 
+        va_start(args, p_lib_path);
         int32_t flags = va_arg(args, int32_t);
         p_result = dlopen(p_lib_path, flags);
+
         printf("open: %s    info: %s\n", p_lib_path, dlerror());
         va_end(args);
     }

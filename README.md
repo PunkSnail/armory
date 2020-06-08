@@ -3,6 +3,12 @@
 
 关于这个库存在的意义, 可以概括为"无聊时间里的产物", 而总有一天, 我会把它带出无聊的范畴
 
+## common
+常用功能库
+
+- `utils_daemon.h` 成为守护进程
+
+- `utils_library.h` 用符号加载动态库
 
 ## formatted_text
 
