@@ -187,9 +187,9 @@ bool format_officer::is_invalid_path(const char *path)
         this->show_red("the target path is empty\n");
         return result;
     }
-    if (access(path, F_OK) == -1)
+    if (access(path, F_OK | R_OK | W_OK) == -1)
     {
-        show_red("access target file failed: %s\n", path);
+        show_red("%s: %s\n", path, strerror(errno));
         return result;
     }
     stat(path, &st);
@@ -348,7 +348,7 @@ bool formatting_check(format_officer_t *p_format,
 
     if (0 == p_format->func_vec.size())
     {
-        p_format->show_red("Unspecified formatting type\n");
+        p_format->show_red("No formatting type specified\n");
         return result;
     }
     result = format_check_each_line(p_format, true);
@@ -359,8 +359,7 @@ bool formatting_check(format_officer_t *p_format,
     }
     else
     {
-        p_format->
-            show_green("\"%s\" doesn't need to be formatted\n", p_path);
+        p_format->show_green("\"%s\" no formatting required\n", p_path);
     }
     return result;
 }
@@ -401,9 +400,14 @@ bool formatting_file(format_officer_t *p_format, const char *p_path,
     p_format->backup = (flags & FORMAT_TO_BACKUP) ? true : false;
     p_format->dispaly = (flags & FORMAT_UNDISPLAY) ? false : true;
 
-    if (p_format->is_invalid_path(p_path) || FORMAT_UNDEFINED == flags)
+    if (FORMAT_UNDEFINED == flags)
     {
-        goto done;
+        p_format->show_red("No formatting type specified\n");
+        return result;
+    }
+    if (p_format->is_invalid_path(p_path))
+    {
+        return result;
     }
     p_format->show("input path: ");
     p_format->show_green("\t%s\n", p_path);
@@ -414,7 +418,7 @@ bool formatting_file(format_officer_t *p_format, const char *p_path,
     }
     if (false == read_and_backup(p_format, p_path))
     {
-        goto done;
+        return result;
     }
     get_format_func_array(p_format, flags);
 
@@ -426,7 +430,6 @@ bool formatting_file(format_officer_t *p_format, const char *p_path,
         p_format->show_green("\t%s\n", p_save_path);
         result = true;
     }
-done:
     return result;
 }
 
