@@ -1,14 +1,12 @@
 cmake_minimum_required(VERSION 2.6)                                                                                  
 
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wconversion -g -Wall")
-# output 
-#set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_SHOW_ARRAY")
 
 include_directories(inc ../common)
 
 aux_source_directory(${PROJECT_SOURCE_DIR}/src RUN_TEST_SOURCES)
 
-add_executable(run_sort_test ${RUN_TEST_SOURCES})
+add_executable(run_sort ${RUN_TEST_SOURCES})
 
-target_link_libraries(run_sort_test)
+target_link_libraries(run_sort)
 

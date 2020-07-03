@@ -3,36 +3,71 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <time.h>
+#include <getopt.h> /* getopt_long */
 
 #include "classic_sort.h"
 
-#define RAND_NUMBER_LIMIT 100000
-#define DEFAULT_ARRAY_LEN 20
+typedef void (*sort_func_t)(int *array, uint32_t len);
 
-typedef void (*sort_func_t)(int *array, int len);
-
-int *get_test_array(int size)
+typedef struct
 {
-    int *array = (int*)calloc((size_t)size, sizeof(int));
+    const char *name;
+    sort_func_t func;
+}sort_t;
 
-    if (NULL == array) {
+static const sort_t g_algorithm_arr[] =
+{
+    {"bubble", bubble_sort},
+    {"select", select_sort},
+    {"insert", insert_sort},
+    {"quick", quick_sort},
+    {"shell", shell_sort},
+    {"merger", merge_sort},
+};
+
+void show_help(void)
+{
+    printf("Options:\n"
+           "-s <size>       Specify the array size\n"
+           "-l <limit>      Maximum element limit\n"
+           "-a <algorithm>  Specify sort algorithm:");
+
+    for (int i = 0; i < sizeof(g_algorithm_arr)/sizeof(sort_t); i++)
+    {
+        i ? printf(", ") : printf(" ");
+
+        printf("\"%s\"", g_algorithm_arr[i].name);
+    }
+    printf("\n-d, --display   Display the array detail\n"
+           "-h, --help      Display this information\n");
+}
+
+static int *create_test_arr(uint32_t size, int limit)
+{
+    int *array = (int*)calloc(size, sizeof(int));
+
+    if (NULL == array)
+    {
+        perror("create_test_arr");
         return array;
     }
-    for (int i = 0; i < size; i++) {
-        array[i] = rand() % RAND_NUMBER_LIMIT;
+    for (uint32_t i = 0; i < size; i++)
+    {
+        array[i] = rand() % limit;
     }
     return array;
 }
 
-int *shuffling(int *array, int size)
+static int *shuffling(int *array, uint32_t size)
 {
-    int swap_index = 0;
-    
-    for (int i = 0; i < size; i++)
+    uint32_t swap_index = 0;
+
+    for (uint32_t i = 0; i < size; i++)
     {
-        swap_index = rand() % size;
-        
+        swap_index = (uint32_t)rand() % size;
+
         if (i != swap_index) {
             swap_value(array[swap_index], array[i]);
         }
@@ -40,72 +75,107 @@ int *shuffling(int *array, int size)
     return array;
 }
 
-void free_test_array(int *array)
+static void print_array(int *array, uint32_t size)
 {
-    if (array)
-        free(array);
-}
-
-static void print_array(int *array, int size)
-{
-#ifdef _SHOW_ARRAY
-    for (int i = 0; i < size; i++)
+    for (uint32_t i = 0; i < size; i++)
         printf("%d ", array[i]);
 
     printf("\n");
-#endif
 }
 
-void test_sort_func(sort_func_t sort, 
-                    const char *depict, int *array, int len)
+static void
+test_sort_func(int *array, uint32_t len, const char *algorithm, bool show)
 {
-#ifdef _SHOW_ARRAY
-    printf("\nshuffling:\n");
-#endif
+    int i = 0;
+    bool match = false;
+    sort_func_t sort = NULL;
+
+    for (; i < sizeof(g_algorithm_arr)/sizeof(sort_t); i++)
+    {
+        if (algorithm && 0 == strcmp(algorithm, g_algorithm_arr[i].name))
+        {
+            match = true;
+            break;
+        }
+    }
+    i = match ? i : 0;
+resrot:
+    sort = g_algorithm_arr[i].func;
+    algorithm = g_algorithm_arr[i].name;
+
+    show ? printf("\nshuffling:\n") : 0;
+
     shuffling(array, len);
-    print_array(array, len);
+
+    show ? print_array(array, len) : 0;
 
     time_t start = clock();
-    sort(array, len);   
+    sort(array, len);
     time_t end = clock();
-    
-    if (depict) {
-        printf("%s: %f\n", depict, (double)(end - start)/CLOCKS_PER_SEC);
+
+    printf("%s sort: %f\n", algorithm, (double)(end - start)/CLOCKS_PER_SEC);
+
+    show ? print_array(array, len) : 0;
+
+    if (false == match && i < sizeof(g_algorithm_arr)/sizeof(sort_t) - 1)
+    {
+         i++;
+         goto resrot;
     }
-    print_array(array, len);
 }
 
 int main(int argc, char *argv[])
 {
-    int array_len = DEFAULT_ARRAY_LEN;
-
-    if (argc > 1 && atoi(argv[1]) > 0) {
-        array_len = atoi(argv[1]);
-    }
     srand((unsigned int)time(NULL));
 
-    int *array = get_test_array(array_len);
-    
+    bool show = false;
+    uint32_t size = 20;
+    int num_limit = 100;
+    const char *algorithm = NULL;
+
+    int opt;
+    static struct option ops[] = {
+        { "size", required_argument, NULL, 's' },
+        { "limit", required_argument, NULL, 'l' },
+        { "algorithm", required_argument, NULL, 'a' },
+        { "display", no_argument, NULL, 'd' },
+        { "help", no_argument, NULL, 'h' }
+    };
+
+    while ((opt = getopt_long(argc, argv, "s:l:a:dh", ops, NULL)) != -1)
+    {
+        switch(opt)
+        {
+        case 's':
+            size = (uint32_t)atoi(optarg);
+            break;
+        case 'l':
+            num_limit = atoi(optarg);
+            break;
+        case 'a':
+            algorithm = optarg;
+            break;
+        case 'd':
+            show = true;
+            break;
+        case 'h':
+            show_help();
+            return 0;
+        default:
+            fprintf(stderr, "Try: %s --help\n", argv[0]);
+            return -1;
+        }
+    }
+    printf("array size: %u\n", size);
+
+    int *array = create_test_arr(size, num_limit);
+
     if (NULL == array)
         return -1;
 
-    printf("random array length: %d\n", array_len);
-    
-    test_sort_func(bubble_sort, "bubble_sort", array, array_len);
-    
-    test_sort_func(select_sort, "select_sort", array, array_len);
-    
-    test_sort_func(insert_sort, "insert_sort", array, array_len);
-   
-    printf("////////////////////////\n");
+    test_sort_func(array, size, algorithm, show);
 
-    test_sort_func(quick_sort, "quick_sort", array, array_len);
-    
-    test_sort_func(shell_sort, "shell_sort", array, array_len);
-   
-    test_sort_func(merge_sort, "merge_sort", array, array_len);
-
-    free_test_array(array);
+    free(array);
     return 0;
 }
 

@@ -1,33 +1,33 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include "classic_sort.h"
 
 
-void bubble_sort(int *array, int len)
+void bubble_sort(int *array, uint32_t len)
 {
-    bool sort_flag = false;
+    uint32_t lo = 0, hi = len;
+    uint32_t last;
 
-    int i = 0, j = 0;
-
-    for (i = 0; i < len && false == sort_flag; i++)
+    for ( ; lo < hi; hi = last, lo = 0)
     {
-        sort_flag = true;
-        
-        for (j = len - 1; j > i; j--) 
+        last = lo;
+
+        while (++lo < hi)
         {
-            if (array[j] < array[j - 1])
+            if (array[lo - 1] > array[lo])
             {
-                sort_flag = false;
-                swap_value(array[j], array[j - 1]);
+                last = lo;
+                swap_value(array[lo - 1], array[lo]);
             }
         }
     }
 }
 
-void select_sort(int *array, int len)
+void select_sort(int *array, uint32_t len)
 {
-    int min_index = 0, i = 0, j = 0;
+    uint32_t min_index = 0, i = 0, j = 0;
 
     for (i = 0; i < len; i++)
     {
@@ -45,9 +45,10 @@ void select_sort(int *array, int len)
     }
 }
 
-void insert_sort(int *array, int len)
+void insert_sort(int *array, uint32_t len)
 {
-    int tmp = 0, i = 0, j = 0;
+    int tmp = 0;
+    uint32_t i = 0, j = 0;
 
     for (i = 1; i < len; i++)
     {
@@ -60,29 +61,31 @@ void insert_sort(int *array, int len)
     }
 }
 
-void shell_sort(int *array, int len)
+void shell_sort(int *array, uint32_t len)
 {
     int i = 0, j = 0, k = 0;
-    int rasie = len, tmp = 0;
+    int rule = (int)len;
+    int tmp = 0;
     do {
-        rasie = rasie / 3 + 1;
-        
-        for (i = 0; i < rasie; i++)
+        rule = rule / 3 + 1;
+
+        for (i = 0; i < rule; i++)
         {
-            for (j = i + rasie; j < len; j += rasie)
+            for (j = i + rule; j < (int)len; j += rule)
             {
-                if (array[j] < array[j - rasie])
+                if (array[j] < array[j - rule])
                 {
                     tmp = array[j];
-                    
-                    for (k = j - rasie; k >= 0 && tmp < array[k]; k -= rasie) {
-                        array[k + rasie] = array[k];
+
+                    for (k = j - rule; k >= 0 && tmp < array[k]; k -= rule)
+                    {
+                        array[k + rule] = array[k];
                     }
-                    array[k + rasie] = tmp;
+                    array[k + rule] = tmp;
                 }
             }
         }
-   } while(rasie > 1);
+   } while(rule > 1);
 }
 
 static void quick_recursion(int *array, int start, int end)
@@ -91,7 +94,7 @@ static void quick_recursion(int *array, int start, int end)
         return;
     }
     int basis = array[start];
-    
+
     int i = start;
     int j = end;
 
@@ -117,77 +120,66 @@ static void quick_recursion(int *array, int start, int end)
     array[i] = basis;
 
     quick_recursion(array, start, i - 1);
-    
+
     quick_recursion(array, i + 1, end);
 }
 
-void quick_sort(int *array, int len)
+void quick_sort(int *array, uint32_t len)
 {
-    quick_recursion(array, 0, len - 1);
+    quick_recursion(array, 0, (int)len - 1);
 }
 
-static void merge(int *array, int start, int end, int mid, int *assist)
+static void merger(int *array, int *arr_buf,
+                   uint32_t lo, uint32_t mi, uint32_t hi)
 {
-    int i_start = start;
-    int i_end   = mid;
-    int j_start = mid + 1;
-    int j_end   = end;
-    int index   = 0;
+    int *l_arr = arr_buf;
+    int *r_arr = array + mi;
 
-    while (i_start <= i_end && j_start <= j_end)
+    uint32_t l_len = mi - lo;
+    uint32_t r_len = hi - mi;
+
+    array = array + lo;
+    memcpy(l_arr, array, l_len * sizeof(array[0]));
+
+    for (uint32_t i = 0, j = 0, k = 0; j < l_len; )
     {
-        if (array[i_start] < array[j_start])
+        if (r_len <= k || l_arr[j] <= r_arr[k])
         {
-            assist[index] = array[i_start];
-            i_start++;
+            array[i++] = l_arr[j++];
         }
-        else{
-            assist[index] = array[j_start];
-            j_start++;
+        if (k < r_len && r_arr[k] < l_arr[j])
+        {
+            array[i++] = r_arr[k++];
         }
-        index++;
-    }
-    while (i_start <= i_end)
-    {
-        assist[index] = array[i_start];
-        i_start++;
-        index++;
-    }
-    while (j_start <= j_end)
-    {
-        assist[index] = array[j_start];
-        j_start++;
-        index++;
-    }
-    for (int i = 0; i < index; i++) {
-        array[start + i] = assist[i];
     }
 }
 
-static void merge_recursion(int *array, int start, int end, int *assist)
+static void merge_recursion(int *array, int *arr_buf,
+                            uint32_t lo, uint32_t hi)
 {
-    if (start == end) {
+    if (hi - lo <= 1)
+    {
         return;
     }
-    int mid = (start + end) / 2;
-    
-    merge_recursion(array, start, mid, assist);
-    
-    merge_recursion(array, mid + 1, end, assist);
-    
-    merge(array, start, end, mid, assist);
+    uint32_t mi = (lo + hi) >> 1;
+
+    merge_recursion(array, arr_buf, lo, mi);
+
+    merge_recursion(array, arr_buf, mi, hi);
+
+    merger(array, arr_buf, lo, mi, hi);
 }
 
-void merge_sort(int *array, int len)
+void merge_sort(int *array, uint32_t len)
 {
-    int *assist = (int*)calloc((size_t)len, sizeof(int));
+    int *arr_buf = NULL;
 
-    if (NULL == assist)
+    if ( 0 == len || !(arr_buf = (int*)calloc(len, sizeof(array[0]))) )
+    {
         return;
+    }
+    merge_recursion(array, arr_buf, 0, len);
 
-    merge_recursion(array, 0, len -1, assist);
-
-    free(assist);
-    assist = NULL;
+    free(arr_buf);
 }
 
