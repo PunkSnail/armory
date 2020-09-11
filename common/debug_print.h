@@ -6,9 +6,11 @@
 
 #ifdef _DEBUG
 
+/* variables in macro functions cannot be concatenated to strings
+ * (since C++11) */
 #define DEBUG_PRINT(fmt, args...) \
 { \
-    printf("%s:%d "fmt, __FILE__, __LINE__, ##args); \
+    printf("%s:%d " fmt, __FILE__, __LINE__, ##args); \
 }
 
 #define debug_print(...) \
