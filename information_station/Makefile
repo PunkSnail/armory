@@ -1,6 +1,9 @@
 
 TOP=$(shell pwd)/
 
+# create lib directory
+TMP:=$(shell mkdir -p lib)
+
 CFLAGS:= -Wall -Wconversion -g -D_DEBUG
 
 export TOP CFLAGS
