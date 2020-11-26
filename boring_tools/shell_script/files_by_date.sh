@@ -3,55 +3,83 @@
 # find 参数
 # -maxdepth 查找最大层数
 # -type     查找类型, 不指定则显示全部匹配文件与文件夹
-# -newermt  查找时间 格式: "2019-06-10"
 
 echo " "
 
 if [ $# -lt 1  ]
 then
-    echo "missing date"
-    exit 1
-else
-    spec_date=$1
-fi
-
-# 格式匹配并且日期有效
-if echo $1 | grep -Eq "[0-9]{4}-[0-9]{2}-[0-9]{2}" \
-    && date -d $1 +%Y%m%d > /dev/null 2>&1
-then : 
-else
-    echo Invalid input date 
-    echo Try this format: \"yyyy-mm-dd\"
+    echo "missing args"
     exit 1
 fi
 
-# option: -print -delete
-spec_opt=$2
+show_help()
+{
+    echo -e "Options:\n"\
+            "  <yyyymmdd>\tFind files by date\n"\
+            "  --delete\tDelete found files\n"\
+            "  --help\tDisplay this information"
+}
 
-start_date=$spec_date #:`date -d "yesterday $spec_date" +%Y-%m-%d`
-end_date=`date -d "tomorrow $spec_date" +%Y-%m-%d`
+assign_opt="-print"
+date_input=0
+
+func_handle_input()
+{
+    for arg in $@
+    do
+        if [ "$arg" == "--delete" ]
+        then
+            assign_opt="-print -delete"
+            continue
+        fi
+        if echo $arg | grep -Eq "[0-9]{4}[0-9]{2}[0-9]{2}"
+        then
+            date_input=$arg
+            continue
+        fi
+        if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]
+        then
+            show_help
+            exit 0
+        fi
+        echo Unknown input: $arg
+        exit 0
+    done
+}
+
+func_handle_input $@
+
+if [ 0 == $date_input ]
+then
+    show_help
+    exit 1
+fi
+
+# If the time of file is 00:00:00, then it belongs to the previous day.
+start_date=$date_input
+# This doesn't result in an extra day of checking.
+end_date=`date -d "tomorrow $date_input" +%Y%m%d`
 
 list=`find ./ -maxdepth 1 -type f\
-    -newermt "$start_date" ! -newermt "$end_date" $spec_opt`
-
-if [ -n "$spec_opt" ]
-then
-    echo "operation: $spec_opt"
-    echo "$list" 
-    exit
-fi
+    -newermt "$start_date" ! -newermt "$end_date" $assign_opt`
 
 count=0
 
 for i in $list
 do
-    ls -l $i
+    if [ "$assign_opt" == "-print" ]
+    then
+        ls -l $i
+    fi
     let count+=1
 done
 
 if [ $count -eq 0 ]
 then
     echo "Target not found"
-fi 
-
+elif
+    [ "$assign_opt" != "-print" ]
+then
+    echo "Total: $count"
+fi
 
