@@ -36,23 +36,10 @@
 `boring_tools/shell_script/commands_loop.sh`是一个可以灵活设定单条命令执行时间和次数的 shell 脚本
 
 ```
-./commands_loop.sh --help
 Options:
   -c '"<cmd>"'  Commands to execute, content needs to
                 be enclosed in quotation marks: (\") or ('").
   -s <num>      Seconds between each execution.
   -t <num>      Variable number of loops.
-  --help        Display this information."')
-
+  --help        Display this information.
 ```
-
-## classic_sort
-
-排序算法入门学习
-
-- `-s <size>` 指定乱序数组大小, 默认 20
-
-- `-a <algorithm>` 指定排序算法, 详见`--help`的输出, 默认全开
-
-- `-h, --help` 更多其它功能说明
-
