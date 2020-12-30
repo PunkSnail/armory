@@ -1,8 +1,6 @@
 
 # ARMORY
 
-关于这个库存在的意义, 可以概括为"无聊时间里的产物", 而总有一天, 我会把它带出无聊的范畴
-
 ## common
 常用功能库
 
@@ -33,6 +31,20 @@
 
 - 对齐与长度限制
   - 在做了
+
+## commands_loop
+`boring_tools/shell_script/commands_loop.sh`是一个可以灵活设定单条命令执行时间和次数的 shell 脚本
+
+```
+./commands_loop.sh --help
+Options:
+  -c '"<cmd>"'  Commands to execute, content needs to
+                be enclosed in quotation marks: (\") or ('").
+  -s <num>      Seconds between each execution.
+  -t <num>      Variable number of loops.
+  --help        Display this information."')
+
+```
 
 ## classic_sort
 
