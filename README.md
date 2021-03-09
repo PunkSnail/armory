@@ -8,6 +8,8 @@
 
 - `utils_library.h` 用符号加载动态库
 
+- `snail_queue` go 环形队列
+
 ## information_station
 功能不重要, 重点是作为参考, 支持多级目录 Makefile 的一种写法 :)
 
