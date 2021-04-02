@@ -10,4 +10,4 @@ Usage of dictionary:
 为方便使用, 在 ~/.bashrc 中加入 "alias wd='dictionary -s'"
 ```
 
-![image](https://github.com/PunkSnail/armory/master/images/dictionary_demonstration.jpg)
+![image](https://github.com/PunkSnail/armory/blob/master/images/dictionary_demonstration.jpg)
