@@ -6,95 +6,75 @@
 
 struct punk_queue
 {
-	queue_item_t* priv_array;
-	uint32_t head;
-	uint32_t tail;
-	uint32_t capacity;
-	uint32_t size;
+    void** priv_array;
+    uint32_t head;
+    uint32_t tail;
+    uint32_t capacity;
+    uint32_t size;
 };
 
-static uint32_t next_index(uint32_t current_index, uint32_t modulo)
-{
-    return (current_index + 1) % modulo;
-}
-
-static bool judge_queue_full(punk_queue_t *p_queue)
-{
-    bool result = false;
-    
-    if (next_index(p_queue->tail, p_queue->capacity) == p_queue->head)
-    {
-        result = true;
-    }
-    return result;
-}
-
-punk_queue_t* create_punk_queue(uint32_t capacity)
+/* Specify queue capacity initialization */
+punk_queue_t* create_queue(uint32_t capacity)
 {
     if (0 == capacity) {
         return NULL;
     }
-    capacity++;
+    capacity++; // for next index
 
     punk_queue_t *result = (punk_queue_t*)calloc(1, sizeof(punk_queue_t));
     result->capacity = capacity;
-    
-    result->priv_array = (queue_item_t*)calloc(capacity, sizeof(queue_item_t));
-    
+
+    result->priv_array = (void**)calloc(capacity, sizeof(void*));
+
     if (NULL == result->priv_array) {
-#ifdef _DEBUG
-        perror("create_punk_queue calloc error");
-#endif
         free (result);
         result = NULL;
     }
     return result;
 }
 
-int punk_enqueue(punk_queue_t *p_queue, queue_item_t data)
+bool queue_is_full(punk_queue_t *p_queue)
 {
-    int result = -1;
-    if (NULL != p_queue && (false == judge_queue_full(p_queue)))
-    {
-        p_queue->priv_array[p_queue->tail] = data;
-        p_queue->tail = next_index(p_queue->tail, p_queue->capacity);
-        p_queue->size++;
-        result = 0;
-    }
-    return result;
+    return (p_queue->tail+ 1) % p_queue->capacity == p_queue->head;
 }
 
-static bool judge_queue_empty(punk_queue_t *p_queue)
+bool enqueue(punk_queue_t *p_queue, void* data)
 {
     bool result = false;
-    if (p_queue->head == p_queue->tail)
+    if (NULL != p_queue && !queue_is_full(p_queue))
     {
+        p_queue->priv_array[p_queue->tail] = data;
+        // next index
+        p_queue->tail = (p_queue->tail+ 1) % p_queue->capacity;
+        p_queue->size++;
         result = true;
     }
     return result;
 }
 
-queue_item_t* punk_dequeue(punk_queue_t *p_queue)
+bool queue_is_empty(punk_queue_t *p_queue)
 {
-    queue_item_t *result = NULL;
-    if (NULL != p_queue && (false == judge_queue_empty(p_queue)))
+    return p_queue->head == p_queue->tail;
+}
+
+void* dequeue(punk_queue_t *p_queue)
+{
+    void *result = NULL;
+    if (NULL != p_queue && !queue_is_empty(p_queue))
     {
         result = p_queue->priv_array[p_queue->head];
-        p_queue->head = next_index(p_queue->head, p_queue->capacity);
+        p_queue->head = (p_queue->head + 1) % p_queue->capacity;
         p_queue->size--;
     }
     return result;
 }
 
-uint32_t get_queue_size(punk_queue_t *p_queue)
+uint32_t queue_size(punk_queue_t *p_queue)
 {
-    if (NULL == p_queue)
-        return 0;
-
-    return p_queue->size;
+    return (NULL == p_queue) ? 0 : p_queue->size;
 }
 
-void destroy_punk_queue(punk_queue_t *p_queue)
+void destroy_queue(punk_queue_t *p_queue)
 {
     if (NULL != p_queue)
     {
