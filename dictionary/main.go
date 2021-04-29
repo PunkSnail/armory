@@ -13,6 +13,7 @@ const DICT_KEY string = "341DEFE6E5CA504E62A567082590D0BD"
 const DICT_URL string = "http://dict-co.iciba.com/api/dictionary.php"
 
 var g_word = flag.String("s", "", "Specify the word to be queried")
+var g_external_url = flag.Bool("e", false, "show external URL")
 
 func main() {
 
@@ -38,11 +39,11 @@ func main() {
 			// save data to database
 			db_set_word(db, *g_word, string(data))
 
-			show_get_result(data)
+			show_get_result(data, *g_external_url)
 		} else {
 			fmt.Printf("%v\n", err)
 		}
 	} else {
-		show_get_result([]byte(db_data))
+		show_get_result([]byte(db_data), *g_external_url)
 	}
 }

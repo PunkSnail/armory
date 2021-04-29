@@ -15,6 +15,7 @@ import (
 type Dict struct {
 	Key         string   `xml:"key"`
 	Ps          []string `xml:"ps"`
+	Pron        []string `xml:"pron"`
 	Pos         []string `xml:"pos"`
 	Note        []string `xml:"note"`
 	Acceptation []string `xml:"acceptation"`
@@ -53,7 +54,7 @@ func online_get_word(url_prefix string, word string) ([]byte, error) {
 	return ioutil.ReadAll(response.Body)
 }
 
-func show_get_result(data []byte) {
+func show_get_result(data []byte, show_url bool) {
 
 	var dict Dict
 	xml.Unmarshal(data, &dict)
@@ -72,11 +73,15 @@ func show_get_result(data []byte) {
 	}
 	for i := 0; i < len(dict.SentList); i++ {
 		if 0 == i {
-			color.White("\n场景例句:")
+			fmt.Printf("\n场景例句:\n")
 		}
 		sent := dict.SentList[i]
-		color.White("[%d]. %s", i+1, strings.TrimSpace(sent.Orig))
+		fmt.Printf("[%d]. %s\n", i+1, strings.TrimSpace(sent.Orig))
 		color.Cyan("    %s", strings.TrimSpace(sent.Trans))
+	}
+	if show_url && 1 < len(dict.Pron) {
+		fmt.Printf("\n发音:\n美[%s]\n英[%s]\n",
+			dict.Pron[1], dict.Pron[0])
 	}
 	fmt.Printf("\n")
 }
