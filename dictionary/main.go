@@ -12,8 +12,8 @@ import (
 const DICT_KEY string = "341DEFE6E5CA504E62A567082590D0BD"
 const DICT_URL string = "http://dict-co.iciba.com/api/dictionary.php"
 
-var g_word = flag.String("s", "", "Specify the word to be queried")
-var g_external_url = flag.Bool("e", false, "show external URL")
+var g_word = flag.String("s", "", "指定要查询的单词")
+var g_external_url = flag.Bool("e", false, "显示外部读音 URL")
 
 func main() {
 

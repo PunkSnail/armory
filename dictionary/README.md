@@ -4,10 +4,11 @@
 
 ```
 Usage of dictionary:
-  -s string
-          Specify the word to be queried
+    -e  显示外部读音 URL
+    -s string
+        指定要查询的单词
 
-为方便使用, 在 ~/.bashrc 中加入 "alias wd='dictionary -s'"
+为方便使用, 推荐在 ~/.bashrc 中加入 "alias wd='dictionary -s'"
 ```
 
 ![image](https://github.com/PunkSnail/armory/blob/master/images/dictionary_demonstration.jpg)
