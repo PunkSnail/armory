@@ -2,11 +2,10 @@ package main
 
 import (
 	"encoding/xml"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/fatih/color"
@@ -27,22 +26,6 @@ type Sent struct {
 	Trans string `xml:"trans"`
 }
 
-func parse_input_args() bool {
-
-	var result bool = false
-
-	if 1 == len(os.Args) {
-		fmt.Printf("missing args, try: %s --help\n", os.Args[0])
-		return result
-	}
-	if flag.Parse(); len(*g_word) < 1 {
-		fmt.Println("missing single word")
-		return result
-	}
-	result = true
-	return result
-}
-
 func online_get_word(url_prefix string, word string) ([]byte, error) {
 
 	response, err := http.Get(url_prefix + word)
@@ -54,7 +37,15 @@ func online_get_word(url_prefix string, word string) ([]byte, error) {
 	return ioutil.ReadAll(response.Body)
 }
 
-func show_get_result(data []byte, show_url bool) {
+/* Using the shell is a bit ugly, but it works */
+func shell_cmd(cmd string) ([]byte, error) {
+
+	exec_cmd := exec.Command("/bin/bash", "-c", cmd)
+
+	return exec_cmd.CombinedOutput()
+}
+
+func presenting_result(data []byte, show_url bool, read bool) {
 
 	var dict Dict
 	xml.Unmarshal(data, &dict)
@@ -82,6 +73,10 @@ func show_get_result(data []byte, show_url bool) {
 	if show_url && 1 < len(dict.Pron) {
 		fmt.Printf("\n发音:\n美[%s]\n英[%s]\n",
 			dict.Pron[1], dict.Pron[0])
+	}
+	if read && 1 < len(dict.Pron) {
+		fmt.Printf("\n🔊")
+		shell_cmd("play " + dict.Pron[1])
 	}
 	fmt.Printf("\n")
 }

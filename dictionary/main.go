@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"os/user"
 )
 
@@ -12,8 +13,22 @@ import (
 const DICT_KEY string = "341DEFE6E5CA504E62A567082590D0BD"
 const DICT_URL string = "http://dict-co.iciba.com/api/dictionary.php"
 
-var g_word = flag.String("s", "", "指定要查询的单词")
-var g_external_url = flag.Bool("e", false, "显示外部读音 URL")
+var g_word = flag.String("w", "", "word 指定要查询的单词")
+var g_external = flag.Bool("e", false, "external 显示外部读音 URL")
+var g_sound = flag.Bool("s", false, "sound 在线获取读音 (need Sox)")
+
+func parse_input_args() bool {
+
+	if 1 == len(os.Args) {
+		fmt.Printf("missing args, try: %s --help\n", os.Args[0])
+		return false
+	}
+	if flag.Parse(); len(*g_word) < 1 {
+		fmt.Println("missing single word")
+		return false
+	}
+	return true
+}
 
 func main() {
 
@@ -39,11 +54,11 @@ func main() {
 			// save data to database
 			db_set_word(db, *g_word, string(data))
 
-			show_get_result(data, *g_external_url)
+			presenting_result(data, *g_external, *g_sound)
 		} else {
 			fmt.Printf("%v\n", err)
 		}
 	} else {
-		show_get_result([]byte(db_data), *g_external_url)
+		presenting_result([]byte(db_data), *g_external, *g_sound)
 	}
 }
