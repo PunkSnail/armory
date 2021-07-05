@@ -9,7 +9,7 @@ Usage of dictionary:
     -w string
         word 指定要查询的单词
 
-对于 '-s' 选项, 需安装 Sox (Sound eXchange), 才能在 termianl 中播放声音
+对于 '-s' 选项, 需安装 Sox (Sound eXchange), 才能在 terminal 中播放声音
 
 推荐把 wd 和编译后的 dictionary 加入 PATH 环境变量, 使用 wd 查词不用每次都输入 '-w'
 ```
