@@ -1,5 +1,6 @@
 
 #include <stdlib.h>     /* exit ... */
+#include <string.h>     /* memset */
 #include <unistd.h>     /* fork ... */
 #include <signal.h>     /* SIGHUP ... */
 #include <stdbool.h>    /* bool */
