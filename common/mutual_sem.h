@@ -1,31 +1,27 @@
-
 #ifndef MUTUAL_SEM_HHH
 #define MUTUAL_SEM_HHH
 
-#define MUTUAL_SEM_KEY 0x6b6e7570 /* punk */
-
-/* note:
- * 用于进程同步 通常与共享内存搭配使用
- * */
+#include <sys/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* producer only 
- * return: succ semid   fail -1 */
-int create_producer_semid(void);
+// If successful, the return value will be a nonnegative integer;
+// otherwise, -1 is returned, with errno indicating the error.
 
-void destroy_producer_semid(int semid);
+int create_producer_semid(key_t key);
 
-/* consumer only 
- * return: succ semid   fail -1 */
-int create_consumer_semid(void);
+int attach_consumer_semid(key_t key);
 
-/* common part */
-void mutual_wait(int semid);
+// If successful, return 0;
+// otherwise, -1 is returned, with errno indicating the error.
 
-void mutual_sig(int semid);
+int mutual_lock(int semid);
+
+int mutual_unlock(int semid);
+
+int destroy_producer_semid(int semid);
 
 #ifdef __cplusplus
 }
