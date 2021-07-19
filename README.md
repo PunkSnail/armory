@@ -10,6 +10,14 @@
 
 - `snail_queue` go 环形队列
 
+- `easy_log` 线程安全的简单日志
+```
+easy_log 输出示例:
+
+  2021/07/19 14:51:23 [DEBUG] 👴
+  2021/07/19 14:51:24 [ERROR] lough
+```
+
 ## information_station
 功能不重要, 重点是作为参考, 支持多级目录 Makefile 的一种写法 :)
 
