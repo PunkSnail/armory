@@ -7,7 +7,7 @@
 #define LOG_USE_LIMIT (1024 * 1024 * 100) // 100 MB
 #define LOG_LEN_LIMIT (4 * 1024) // 4 KB
 
-enum LOG_LEVEL
+typedef enum
 {
     FATAL = 1,
     ERROR,
@@ -15,26 +15,26 @@ enum LOG_LEVEL
     INFO,
     DEBUG,
     TRACE,
-};
+}log_level_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+    // initialize or reset the easy log
+    bool init_easy_log(const char *log_path, log_level_t level);
 
-    void destroy_log();
-
-    bool carete_log(const char *log_path, int level);
-
-    int log_get_level();
+    log_level_t log_get_level();
 
     void log_append(const char *level, const char *format, ...);
+
+    void destroy_easy_log();
 
 #ifdef __cplusplus
 }
 #endif
 
 #define LOG_INIT(log_path, level) \
-    carete_log(log_path, level);
+    init_easy_log(log_path, level);
 
 #define LOG_TRACE(fmt, args...) \
     do \
