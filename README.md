@@ -15,7 +15,7 @@
 easy_log 输出示例:
 
   2021/07/19 14:51:23 [DEBUG] 👴
-  2021/07/19 14:51:24 [ERROR] lough
+  2021/07/19 14:51:24 [ERROR] laugh
 ```
 
 ## information_station
@@ -55,12 +55,13 @@ Options:
 ```
 
 ## dictionary
-`dictionary`是一个利用金山词霸接口查询单词的自用小工具. 在线查询结果会保存到 "~/.dictionary.sqlite", 下次查询同一内容直接读数据库, 通常情况此功能意义不大, 但提供了"查过就是我的了!"的爽快感, 同时无视了线上的更新, 线下同样丰富多彩
+`dictionary`是一个利用金山词霸接口查询单词的自用小工具. 在线查询结果会保存到 "~/.dictionary.sqlite", 下次查询同一内容直接读数据库, 通常情况此功能意义不大, 但提供了"查过就是我的了!"的爽快感, 同时无视了线上的更新(-o 强制在线查询, 并更新本地内容), 线下同样丰富多彩
 
 ```
 Usage of dictionary:
     -e  external 显示外部读音 URL
     -s  sound 在线获取读音 (need sox)
+    -o  online 获取线上非本地结果
     -w string
         word 指定要查询的单词
 
@@ -69,3 +70,4 @@ Usage of dictionary:
 推荐把 wd 和编译后的 dictionary 加入 PATH 环境变量, 使用 wd 查词不用每次都输入 '-w'
 ```
 
+![image](https://github.com/PunkSnail/armory/blob/master/images/dictionary_demonstration.jpg)
