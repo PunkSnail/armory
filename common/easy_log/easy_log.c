@@ -113,18 +113,15 @@ static bool log_append_check()
         fclose(g_log->fp);
         char utc_buf[UTC_FORMAT_LEN] = { 0 };
         utc_format_for_path(utc_buf, UTC_FORMAT_LEN);
-        char old_path[PATH_MAX] = { 0 };
-        char new_path[PATH_MAX] = { 0 };
-#ifdef __linux__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-truncation"
-#endif
+
+        // TMPBUF_LEN avoids a silly warning
+#define TMPBUF_LEN PATH_MAX + UTC_FORMAT_LEN
+        char old_path[TMPBUF_LEN] = { 0 };
+        char new_path[TMPBUF_LEN] = { 0 };
         // mv xxx to xxx_<time>
-        snprintf(old_path, PATH_MAX, "%s", g_log->log_path);
-        snprintf(new_path, PATH_MAX, "%s_%s", g_log->log_path, utc_buf);
-#ifdef __linux__
-#pragma GCC diagnostic pop
-#endif
+        snprintf(old_path, TMPBUF_LEN, "%s", g_log->log_path);
+        snprintf(new_path, TMPBUF_LEN, "%s_%s", g_log->log_path, utc_buf);
+
         rename(old_path, new_path);
 
         g_log->fp = fopen(old_path, "w");
