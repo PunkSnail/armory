@@ -14,36 +14,27 @@
 #define PATH_MAX 1024
 #endif
 
-static int lock_file(int fd)
+bool is_proc_running(const char *pid_file)
 {
-    struct flock fl;
-    fl.l_type = F_WRLCK;
-    fl.l_start = 0;
-    fl.l_whence = SEEK_SET;
-    fl.l_len = 0;
-    fl.l_pid = -1;
-
-    return fcntl(fd, F_SETLK, &fl);
-}
-
-bool is_proc_running(const char *proc_name)
-{
-    char pid_file[PATH_MAX] = { 0 };
-    snprintf(pid_file, PATH_MAX, "%s/.%s.pid", getenv("HOME"), proc_name);
-
     int fd = open(pid_file, O_CREAT|O_RDWR);
     if (fd < 0)
     {
         fprintf(stderr, "open %s failed %s\n", pid_file, strerror(errno));
         return false;
     }
-    if (-1 == lock_file(fd))
+    struct flock lock = {
+        .l_type = F_WRLCK,
+        .l_whence = SEEK_SET,
+        .l_start = 0, // the offset of the start of the region
+        .l_len = 0, // 0 means to the end of the file
+        .l_pid = -1, // -1 means the lock isn't associated with a process
+    };
+    if (-1 == fcntl(fd, F_SETLK, &lock))
     {
         close(fd);
         return true;
     }
     ftruncate(fd, 0);
-
     dprintf(fd, "%ld", (long)getpid());
     // do not close the file descriptor
     fsync(fd);
@@ -58,7 +49,7 @@ bool proc_usurpation(const char *proc_name)
     char pid_file[PATH_MAX] = { 0 };
 
     snprintf(pid_file, PATH_MAX, "%s/.%s.pid", getenv("HOME"), proc_name);
-
+    // check the permissions by the way
     int fd = open(pid_file, O_CREAT|O_RDWR);
     if (fd < 0)
     {
@@ -71,7 +62,7 @@ bool proc_usurpation(const char *proc_name)
     }
     close(fd);
 
-    while (is_proc_running(proc_name))
+    while (is_proc_running(pid_file))
     {
         sched_yield(); // give up the CPU (not essential)
     }
