@@ -8,6 +8,8 @@
 
 - `utils_library.h` 用符号加载动态库
 
+- `utils_singleton` 辅助实现单例进程
+
 - `snail_queue` go 环形队列
 
 - `easy_log` 线程安全的简单日志
