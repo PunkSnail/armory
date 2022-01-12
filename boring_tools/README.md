@@ -1,5 +1,5 @@
 # qqwry2txt
-`qqwry2txt` 仅用于解析[纯真 IP 库镜像](https://github.com/wisdomfusion/qqwry.dat) 到 txt 文件, 代码参考[C语言解析QQwry.dat](https://www.iteye.com/blog/hzy3774-1851364)
+`qqwry2txt` 仅用于解析[纯真 IP 库镜像](https://github.com/wisdomfusion/qqwry.dat) 到 utf-8 编码的文件中, 代码参考[ C 解析 QQwry.dat](https://www.iteye.com/blog/hzy3774-1851364)
 
 
 ```

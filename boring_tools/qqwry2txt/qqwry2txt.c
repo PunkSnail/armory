@@ -4,10 +4,14 @@
 #include <string.h>
 #include <errno.h>
 #include <getopt.h> /* getopt_long */
+#include <iconv.h>
+#include <time.h>
 
 #define MAX_LINE_SIZE 1024 // cache of single line
 
-static uint8_t g_line_cache[MAX_LINE_SIZE];
+static char g_src_line[MAX_LINE_SIZE] = { 0 };
+static char g_dst_line[MAX_LINE_SIZE] = { 0 };
+static char g_line_cache[MAX_LINE_SIZE] = { 0 };
 
 void show_help(void)
 {
@@ -19,22 +23,35 @@ void show_help(void)
 
 static inline void format_write_ip(FILE *out_stream, uint32_t ip)
 {
-    fprintf(out_stream, "%u.%u.%u.%u  ", (ip >> 24) & 0xff,
+    fprintf(out_stream, "%u.%u.%u.%u|", (ip >> 24) & 0xff,
              (ip >> 16) & 0xff, (ip >> 8) & 0xff, ip & 0xff);
+}
+
+static void gbk_to_utf8(const char* src, char* dst, uint32_t len)
+{
+    size_t inlen = strlen(src) + 1;
+    size_t outlen = len;
+
+    char* inbuf = g_line_cache;
+    memcpy(inbuf, src, len);
+
+    iconv_t ret = iconv_open("UTF-8", "GBK");
+    if (ret != (iconv_t)-1) {
+        iconv(ret, &inbuf, &inlen, &dst, &outlen);
+        iconv_close(ret);
+    }
 }
 
 static void write_c_string(FILE *in_stream, FILE *out_stream)
 {
     for (uint32_t i = 0; i < MAX_LINE_SIZE; i++)
     {
-        uint8_t c = (uint8_t)fgetc(in_stream);
-        if (c == 0 || c == EOF)
+        if ((g_src_line[i] = (char)fgetc(in_stream)) == 0)
         {
-            fputs((const char*)g_line_cache, out_stream);
-            memset(g_line_cache, 0, i);
-            return;
+            gbk_to_utf8(g_src_line, g_dst_line, MAX_LINE_SIZE - 1);
+            fprintf(out_stream, "%s", g_dst_line);
+            return; // normal case
         }
-        g_line_cache[i] = c;
     }
     printf("[ERROR] The cache is not big enough\n");
     exit(0);
@@ -109,13 +126,14 @@ static void parse_qqwry_dat(FILE *in_stream, FILE *out_stream)
     }
 }
 
-static void run_trans(const char *dat_path, const char *out_path)
+static int run_trans(const char *dat_path, const char *out_path)
 {
+    int result = -1;
     FILE *out_stream = fopen(out_path, "wb");
     if (out_stream == NULL)
     {
         printf("open '%s' failed %s\n", out_path, strerror(errno));
-        return;
+        return result;
     }
     FILE *in_stream = fopen(dat_path, "rb");
     if (in_stream == NULL)
@@ -125,9 +143,11 @@ static void run_trans(const char *dat_path, const char *out_path)
     }
     parse_qqwry_dat(in_stream, out_stream);
 
+    result = 0;
     fclose(in_stream);
 trans_end:
     fclose(out_stream);
+    return result;
 }
 
 int main(int argc, char *argv[])
@@ -164,5 +184,9 @@ int main(int argc, char *argv[])
         show_help();
         return -1;
     }
+    clock_t start = clock();
+
     run_trans(dat_path, out_path);
+
+    printf("\n %lfs\n", (double)(clock() - start) / CLOCKS_PER_SEC);
 }
