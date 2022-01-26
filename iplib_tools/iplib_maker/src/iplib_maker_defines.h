@@ -10,6 +10,7 @@ using namespace std;
 #define DEFAULT_BLOCK_SIZE  (1024 * 8) // must be a multiple of 8
 
 #define INDEX_BLOCK_LENGTH  12
+#define TOP_BLOCK_LENGTH    12
 
 struct index_block_t
 {
@@ -84,28 +85,28 @@ struct data_block_t
  * iplib 数据结构:
  * 1. header part
  * 1): top block:
- * +------------+-----------+
- * | 4 bytes	| 4 bytes   |
- * +------------+-----------+
- *  start offset    end offset
+ * +------------+------------+------------+------------+
+ * | 4 bytes    | 4 bytes    | 4 bytes    | 4 bytes    |
+ * +------------+------------+------------+------------+
+ *    "PUNK"    |start offset| end offset | reserved
  *
  * 2): index part
  * +------------+-----------+
- * | 4bytes		| 4bytes	| ...
+ * | 4bytes     | 4bytes    | ...
  * +------------+-----------+
- *  start ip        offset
+ *  start ip      offset
  *
  * 2. data part: 仅当数据长度 >= 255 字节时, 数据的前两字节才储存长度
  * +------------+-----------------------+
- * | 2bytes		| describe string	    | ...
+ * | 2bytes     | describe string       | ...
  * +------------+-----------------------+
  *  The 2-bytes data length is only valid when data length >= 255.
  *
  * 3. index part: (ip range)
- * +------------+-----------+---------------+
- * | 4bytes		| 4bytes	| 4bytes		| ...
- * +------------+-----------+---------------+
- *  start ip 	  end ip	  3 byte data offset & 1 byte data length
+ * +------------+------------+------------+
+ * | 4bytes     | 4bytes     | 4bytes     | ...
+ * +------------+------------+------------+
+ *  start ip      end ip     3 byte data offset & 1 byte data length
  *  */
 struct iplib_maker
 {

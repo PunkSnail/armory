@@ -8,19 +8,37 @@
 // refer: https://github.com/lionsoul2014/ip2region
 
 #define INDEX_BLOCK_LENGTH 12
+#define MAGIC_STRING "PUNK"
 
-/* get the start of buffer from the offset */
-static inline uint32_t
-get_buffer_offset(const char *buffer, uint32_t offset)
-{
-    return (((uint32_t)(buffer[offset] << 0) & 0x000000FF) |
-            ((uint32_t)(buffer[offset+1] <<  8) & 0x0000FF00) |
-            ((uint32_t)(buffer[offset+2] << 16) & 0x00FF0000) |
-            ((uint32_t)(buffer[offset+3] << 24) & 0xFF000000));
-}
-
+/* PUNK iplib 数据结构:
+ * 1. header part
+ * 1): top block:
+ * +------------+------------+------------+------------+
+ * | 4 bytes    | 4 bytes    | 4 bytes    | 4 bytes    |
+ * +------------+------------+------------+------------+
+ *    "PUNK"    |start offset| end offset | reserved
+ *
+ * 2): index part
+ * +------------+-----------+
+ * | 4bytes     | 4bytes    | ...
+ * +------------+-----------+
+ *  start ip        offset
+ *
+ * 2. data part: 仅当数据长度 >= 255 字节时, 数据的前两字节才储存长度
+ * +------------+-----------------------+
+ * | 2bytes     | describe string       | ...
+ * +------------+-----------------------+
+ *  The 2-bytes data length is only valid when data length >= 255.
+ *
+ * 3. index part: (ip range)
+ * +------------+-----------+---------------+
+ * | 4bytes     | 4bytes    | 4bytes        | ...
+ * +------------+-----------+---------------+
+ *  start ip 	  end ip	  3 byte data offset & 1 byte data length
+ *  */
 static bool load_db_to_mem(iplib_reader_t *p_reader, FILE *db_fd)
 {
+    uint32_t index_end = 0;
     if (p_reader->db_mem != NULL) {
         return true;
     }
@@ -33,22 +51,24 @@ static bool load_db_to_mem(iplib_reader_t *p_reader, FILE *db_fd)
     if (p_reader->db_mem == NULL ) {
         return false;
     }
-    if (fread(p_reader->db_mem, filesize, 1, db_fd) != 1 ) {
+    if (fread(p_reader->db_mem, filesize, 1, db_fd) != 1) {
         return false;
     }
     char *buffer = p_reader->db_mem;
-    p_reader->first_index = get_buffer_offset(buffer, 0);
-    p_reader->total_blocks =
-        (get_buffer_offset(buffer, 4) - p_reader->first_index)
-        / INDEX_BLOCK_LENGTH + 1;
-
-    const char *end_str = p_reader->db_mem + (filesize - 8);
-
-    if (strstr(end_str, "PUNK")) { // the punk IP lib ends with this tag
+    if (!strncmp(buffer, MAGIC_STRING, strlen(MAGIC_STRING)))
+    {
         p_reader->is_punk_lib = true;
+        buffer += strlen(MAGIC_STRING);
     } else {
         p_reader->is_punk_lib = false;
     }
+    memcpy(&p_reader->index_start, buffer, sizeof(uint32_t));
+    memcpy(&index_end, buffer + 4, sizeof(uint32_t));
+
+    p_reader->total_blocks =
+        (index_end - p_reader->index_start)
+        / INDEX_BLOCK_LENGTH + 1;
+
     return true;
 }
 
@@ -91,15 +111,15 @@ get_data_info(iplib_reader_t *p_reader, uint32_t ip, uint16_t *p_len)
         curr = (i + blocks) >> 1;
 
         p_data = p_reader->db_mem +
-            p_reader->first_index + curr * INDEX_BLOCK_LENGTH;
+            p_reader->index_start + curr * INDEX_BLOCK_LENGTH;
 
-        if (ip < get_buffer_offset(p_data, 0)) { // less then start
+        if (ip < *((uint32_t*)p_data)) { // less then start
             blocks = curr - 1;
         } else {
-            if (ip > get_buffer_offset(p_data, 4)) { // greater then end
+            if (ip > *((uint32_t*)(p_data + 4))) {
                 i = curr + 1;
             } else {
-                offset = get_buffer_offset(p_data, 8);
+                offset = *((uint32_t*)(p_data + 8));
                 break;
             }
         }

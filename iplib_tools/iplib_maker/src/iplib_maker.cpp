@@ -212,13 +212,14 @@ write_header_blocks(list<header_block_t*> &header_pool,
     uint32_t curr = (uint32_t)ftell(iplib_w);
     fseek(iplib_w, 0, SEEK_SET); // set the file pointer to the header
 
-    uint64_t top_block = 0;
+    char top_block[TOP_BLOCK_LENGTH] ={ 0 };
     uint32_t end = curr - INDEX_BLOCK_LENGTH;
 
-    memcpy(((char*)&top_block) + 0, &start, sizeof(uint32_t));
-    memcpy(((char*)&top_block) + 4, &end, sizeof(uint32_t));
+    memcpy(&top_block[0], "PUNK", 4);
+    memcpy(&top_block[4], &start, sizeof(uint32_t));
+    memcpy(&top_block[8], &end, sizeof(uint32_t));
 
-    fwrite(&top_block, sizeof(char), sizeof(uint64_t), iplib_w);
+    fwrite(top_block, sizeof(char), TOP_BLOCK_LENGTH, iplib_w);
 
     for (auto it = header_pool.begin(); it != header_pool.end(); ++it)
     {
@@ -230,21 +231,6 @@ write_header_blocks(list<header_block_t*> &header_pool,
         fwrite(&block, sizeof(char), sizeof(uint64_t), iplib_w);
     }
     fseek(iplib_w , 0, SEEK_END); // reset now
-}
-
-static void write_timestamp_str(FILE *iplib_w)
-{
-    char end_buf[32] = { 0 };
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-
-    struct tm curr;
-    localtime_r((time_t*)&tv.tv_sec, &curr);
-
-    snprintf(end_buf, sizeof(end_buf), "\n%d/%02d/%02d.PUNK",
-             curr.tm_year + 1900, curr.tm_mon + 1, curr.tm_mday);
-
-    fwrite(end_buf, sizeof(char), strlen(end_buf), iplib_w);
 }
 
 static uint32_t calc_header_size(ifstream *p_stream, uint32_t limits)
@@ -272,7 +258,7 @@ static uint32_t calc_header_size(ifstream *p_stream, uint32_t limits)
 
     uint32_t blocks = ((line_count/limits) + 2); // + 2 for start and end
     /* top block + header block size */
-    return 8 + (blocks * HEADER_BLOCK_LENGTH);
+    return TOP_BLOCK_LENGTH + (blocks * HEADER_BLOCK_LENGTH);
 }
 
 bool iplib_maker::build_iplib(const char *output)
@@ -298,8 +284,6 @@ bool iplib_maker::build_iplib(const char *output)
                        limits, iplib_w);
     // write the header blocks
     write_header_blocks(this->header_pool, record_offset, iplib_w);
-    // write the release timestamp
-    write_timestamp_str(iplib_w);
 
     fclose(iplib_w);
     debug_print("done.\n");

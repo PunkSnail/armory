@@ -13,9 +13,9 @@
  * refer: https://github.com/lionsoul2014/ip2region */
 typedef struct {
     char *db_mem;   //db binary string for memory search mode
-	uint32_t first_index;	// first index ptr
+	uint32_t index_start;	// index area start offset
 	uint32_t total_blocks;	// total index blocks number
-    bool is_punk_lib; // the punk IP lib ends with "PUNK"
+    bool is_punk_lib; // the punk iplib starts with "PUNK"
     char describe_cache[MAX_DESCRIBE_LENGTH];
 } iplib_reader_t;
 
