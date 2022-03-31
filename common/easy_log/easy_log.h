@@ -9,23 +9,25 @@
 
 typedef enum
 {
-    FATAL = 1,
-    ERROR,
-    WARN,
-    INFO,
-    DEBUG,
-    TRACE,
+    LOG_LEVEL_FATAL = 1,
+    LOG_LEVEL_ERROR,
+    LOG_LEVEL_WARN,
+    LOG_LEVEL_INFO,
+    LOG_LEVEL_DEBUG,
+    LOG_LEVEL_TRACE,
 }log_level_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
     // initialize or reset the easy log
-    bool init_easy_log(const char *log_path, log_level_t level);
+    bool init_easy_log(const char *log_path,
+                       log_level_t level, bool enable_lock);
 
-    log_level_t log_get_level();
-
-    void log_append(const char *level, const char *format, ...);
+    log_level_t log_get_level(void);
+    // thread-safe, if the lock was enabled
+    bool log_append(const char *level, const char *module,
+                    const char *format, ...);
 
     void destroy_easy_log();
 
@@ -33,55 +35,67 @@ extern "C" {
 }
 #endif
 
-#define LOG_INIT(log_path, level) \
-    init_easy_log(log_path, level);
+// default for single thread
+#define LOG_INIT(log_path, level) init_easy_log(log_path, level, false);
 
-#define LOG_TRACE(fmt, args...) \
-    do \
+
+#define MODLOG_TRACE(module, fmt, args...) \
 { \
-    if (get_level() >= TRACE) \
+    if (log_get_level() >= LOG_LEVEL_TRACE) \
     { \
-        log_append("[TRACE]", fmt "\n", ##args); \
+        log_append("[TRACE]", module, fmt "\n", ##args); \
     } \
-} while (0)
+}
 
-#define LOG_DEBUG(fmt, args...) \
-    do \
+#define LOG_TRACE(fmt, args...) MODLOG_TRACE(NULL, fmt, ##args)
+
+
+#define MODLOG_DEBUG(module, fmt, args...) \
 { \
-    if (log_get_level() >= DEBUG) \
+    if (log_get_level() >= LOG_LEVEL_DEBUG) \
     { \
-        log_append("[DEBUG]", fmt "\n", ##args); \
+        log_append("[DEBUG]", module, fmt "\n", ##args); \
     } \
-} while (0)
+}
 
-#define LOG_INFO(fmt, args...) \
-    do \
+#define LOG_DEBUG(fmt, args...) MODLOG_DEBUG(NULL, fmt, ##args)
+
+#define MODLOG_INFO(module, fmt, args...) \
 { \
-    if (log_get_level() >= INFO) \
+    if (log_get_level() >= LOG_LEVEL_INFO) \
     { \
-        log_append("[INFO]", fmt "\n", ##args); \
+        log_append("[INFO]", module, fmt "\n", ##args); \
     } \
-} while (0)
+}
 
-#define LOG_WARN(fmt, args...) \
-    do \
+#define LOG_INFO(fmt, args...) MODLOG_INFO(NULL, fmt, ##args)
+
+
+#define MODLOG_WARN(module, fmt, args...) \
 { \
-    if (log_get_level() >= WARN) \
+    if (log_get_level() >= LOG_LEVEL_WARN) \
     { \
-        log_append("[WARN]", fmt "\n", ##args); \
+        log_append("[WARN]", module, fmt "\n", ##args); \
     } \
-} while (0)
+}
 
-#define LOG_ERROR(fmt, args...) \
-    do \
+#define LOG_WARN(fmt, args...) MODLOG_WARN(NULL, fmt, ##args)
+
+
+#define MODLOG_ERROR(module, fmt, args...) \
 { \
-    if (log_get_level() >= ERROR) \
+    if (log_get_level() >= LOG_LEVEL_ERROR) \
     { \
-        log_append("[ERROR]", fmt "\n", ##args); \
+        log_append("[ERROR]", NULL, fmt "\n", ##args); \
     } \
-} while (0)
+}
 
-#define LOG_FATAL(fmt, args...) \
-    log_append("[FATAL]", fmt "\n", ##args);
+#define LOG_ERROR(fmt, args...) MODLOG_ERROR(NULL, fmt, ##args)
+
+
+#define MODLOG_FATAL(module, fmt, args...) \
+    log_append("[FATAL]", module, fmt "\n", ##args);
+
+#define LOG_FATAL(fmt, args...) MODLOG_FATAL(NULL, fmt, ##args)
 
 #endif // EASY_LOG_HH
