@@ -6,8 +6,6 @@ using namespace std;
 /* NOTE: 线程安全的 CAS(compare and swap) 队列, 更适合用于单生产者模式
  * Thread-safe CAS queue, more suitable for single-producer model */
 
-#define COMPARE_AND_SWAP(o, e, d) atomic_compare_exchange_weak(o, e, d)
-
 template <typename T>
 class cas_queue_t
 {
@@ -48,15 +46,15 @@ private:
     }
 private:
     uint32_t _size;
-    atomic_uint _length;
+    std::atomic<uint32_t> _length;
 
-    atomic_uint _read_idx;
-    atomic_uint _write_idx;
+    std::atomic<uint32_t> _read_idx;
+    std::atomic<uint32_t> _write_idx;
     /* 上一个完成入队的元素的索引, 如果它不等于 _write_idx, 则表明有写请求
      * 未完成
      * the index of the last completed equeue element, if it's not equal
      * to _write_idx, then there is an uncompleted write request */
-    atomic_uint _last_write_idx;
+    std::atomic<uint32_t> _last_write_idx;
 
     unique_ptr<T[]> _queue;
 };
@@ -91,17 +89,17 @@ bool cas_queue_t<T>::enqueue(T &data)
             return false; // queue is full
         }
 
-    } while (!COMPARE_AND_SWAP(&this->_write_idx,
-                               &curr_write_idx, (curr_write_idx + 1)));
+    } while (!atomic_compare_exchange_weak
+             (&this->_write_idx, &curr_write_idx, (curr_write_idx + 1)));
 
     this->_queue[index_of_queue(curr_write_idx)] = data;
 
-    while (!COMPARE_AND_SWAP(&this->_last_write_idx,
-                             &curr_write_idx, curr_write_idx + 1))
+    while (!atomic_compare_exchange_weak
+           (&this->_last_write_idx, &curr_write_idx, curr_write_idx + 1))
     {
         sched_yield(); // relinquish the CPU, take a breath
     }
-    atomic_fetch_add(&this->_length, 1);
+    atomic_fetch_add(&this->_length, uint32_t(1));
 
     return true;
 }
@@ -125,10 +123,10 @@ bool cas_queue_t<T>::dequeue(T &data)
         // retrieve the data from the queue
         data = this->_queue[index_of_queue(curr_read_idx)];
 
-        if (COMPARE_AND_SWAP(&this->_read_idx,
-                             &curr_read_idx, curr_read_idx + 1))
+        if (atomic_compare_exchange_weak(&this->_read_idx, &curr_read_idx,
+                                         curr_read_idx + 1))
         {
-            atomic_fetch_sub(&this->_length, 1);
+            atomic_fetch_sub(&this->_length, uint32_t(1));
             return true;
         }
     } while (1);
