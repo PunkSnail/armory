@@ -20,9 +20,6 @@ easy_log 输出示例:
   2021/07/19 14:51:24 [ERROR] laugh
 ```
 
-## information_station
-功能不重要, 重点是作为参考, 支持多级目录 Makefile 的一种写法 :)
-
 ## formatted_text
 
 格式化文本文件
@@ -41,11 +38,8 @@ easy_log 输出示例:
 
 - `-h, --help` 更多其它功能说明
 
-- 对齐与长度限制
-  - 在做了
-
 ## commands_loop
-`boring_tools/shell_script/commands_loop.sh`是一个可以灵活设定单条命令执行时间和次数的 shell 脚本
+`boring_tools/commands_loop.sh`是一个可以灵活设定单条命令执行时间和次数的 shell 脚本
 
 ```
 Options:
@@ -54,6 +48,16 @@ Options:
   -s <num>      Seconds between each execution.
   -t <num>      Variable number of loops.
   --help        Display this information.
+```
+
+## byte_convert
+`boring_tools/byte_convert`字节转换工具
+
+```
+Options:
+   <number>		Specify the number of bytes to be converted
+                Example: "./byte_convert 1048576" or "./byte_convert 0x100000"
+   --help		Display this information
 ```
 
 ## dictionary

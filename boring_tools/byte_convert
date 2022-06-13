@@ -1,0 +1,86 @@
+#!/bin/bash
+
+ONE_KB=1024     # 0x400
+ONE_MB=1048576  # 0x100000
+ONE_GB=1073741824       # 0x40000000
+ONE_TB=1099511627776    # 0x10000000000
+
+input=$1
+input_num="invalid"
+
+if [ ${#input} -gt 18 ]; then
+    echo "the input is too long and the integer may overflow."
+    exit 1
+fi
+
+if [ $input == "--help"  ] || [ $input == "-h"  ]; then
+    echo -e "Options:\n"\
+        "  <number>\t\tSpecify the number of bytes to be converted\n"\
+        "\t\t\tExample: \"$0 $ONE_MB\" or \"$0 0x100000\"\n"\
+        "  --help\t\tDisplay this information"
+    exit 0
+fi
+
+if [ $# -lt 1  ]; then
+   input=0
+fi
+
+if [[ $input =~ ^[0-9]*$ ]]; then
+    input_num=$input
+elif [[ ${input:2} =~ ^[0-9a-fA-F]*$ ]]; then
+
+    hex_prefix=`echo ${input:0:2}`
+
+    if [[ $hex_prefix == "0x" || $hex_prefix == "0X" ]]; then
+        input_num=`printf "%d" $input`
+    fi
+fi
+
+if [[ $input_num == "invalid" ]]; then
+    echo "invalid input: \"$input\""
+    exit
+fi
+
+calc_result=0
+relationship="≈"
+
+function internal_calc()
+{
+    calc_result=`echo "$1 / $2 " | bc -l`
+    #echo ${calc_result%.*}
+    subfix=`echo ${calc_result#*.}`
+    if [[ $subfix =~ ^[0]+$ ]]
+    then
+        relationship="="
+    fi
+}
+
+if [ $input_num -lt $ONE_KB ]; then
+    echo $input_num" B"
+    exit
+elif [ $input_num -lt $ONE_MB ]; then
+    # 0x400 <= number < 0x100000
+    internal_calc $input_num $ONE_KB
+    result=`printf "%.1f KB" $calc_result`
+
+elif [ $input_num -lt $ONE_GB ]; then
+    # 0x1000000 <= number < 0x40000000
+    internal_calc $input_num $ONE_MB
+    result=`printf "%.1f MB" $calc_result`
+
+elif [ $input_num -lt $ONE_TB ]; then
+    # 0x40000000 <= number < 0x10000000000
+    internal_calc $input_num $ONE_GB
+    result=`printf "%.1f GB" $calc_result`
+
+elif [ $input_num -ge $ONE_TB ]; then
+    # 0x10000000000 <= number
+    internal_calc $input_num $ONE_TB
+    result=`printf "%.2f TB" $calc_result`
+else
+    echo "? ? ?: \"$input\""
+    exit
+fi
+
+echo "${input_num} B $relationship $result"
+exit 0
