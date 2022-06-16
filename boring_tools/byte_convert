@@ -13,16 +13,16 @@ if [ ${#input} -gt 18 ]; then
     exit 1
 fi
 
+if [ $# -lt 1 ]; then
+   input=0
+fi
+
 if [ $input == "--help"  ] || [ $input == "-h"  ]; then
     echo -e "Options:\n"\
         "  <number>\t\tSpecify the number of bytes to be converted\n"\
         "\t\t\tExample: \"$0 $ONE_MB\" or \"$0 0x100000\"\n"\
         "  --help\t\tDisplay this information"
     exit 0
-fi
-
-if [ $# -lt 1  ]; then
-   input=0
 fi
 
 if [[ $input =~ ^[0-9]*$ ]]; then

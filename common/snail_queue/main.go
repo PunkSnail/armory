@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"time"
 )
 
 type phony_t struct {
@@ -11,43 +10,54 @@ type phony_t struct {
 	num      int
 }
 
-func test_enqueue1(queue *snail_queue_t) {
+func test_enqueue1(queue *SnailQueue) {
 
 	for i := 0; i < 6; i++ {
 
-		if !queue.enqueue(&phony_t{
-			name: "snail", describe: "boy", num: i}) {
-			fmt.Printf("enqueue1 is full\n")
-		}
-		time.Sleep(1 * time.Second)
-	}
-}
-
-func test_enqueue2(queue *snail_queue_t) {
-
-	for i := 0; i < 6; i++ {
-
-		if !queue.enqueue(&phony_t{
+		if !queue.Enqueue(&phony_t{
 			name: "liban", describe: "girl", num: i}) {
-			fmt.Printf("enqueue2 is full\n")
+			fmt.Printf("the queue is full\n")
 		}
-		time.Sleep(1 * time.Second)
 	}
-}
+	for i := 0; i < 10; i++ {
 
-func main() {
-	queue := init_snail_queue(5)
-
-	go test_enqueue1(queue)
-	go test_enqueue2(queue)
-
-	for i := 0; i < 7; i++ {
-
-		for !queue.is_empty() {
-			obj, _ := queue.dequeue()
+		for !queue.IsEmpty() {
+			obj, _ := queue.Dequeue()
 			phony := obj.(*phony_t)
 			fmt.Printf("%v\n", *phony)
 		}
-		time.Sleep(1 * time.Second)
 	}
+}
+
+func test_enqueue2(queue *SnailQueue) {
+
+	for i := 0; i < 15; i++ {
+
+		if queue.IsFull() {
+			queue.Dequeue()
+		}
+		queue.Enqueue(i)
+	}
+	queue.Dequeue()
+
+	var limit uint16 = 5
+
+	queue.Traversal(func(ele interface{}) {
+		num := ele.(int)
+		fmt.Printf("num: %d\n", num)
+	}, limit)
+
+	fmt.Printf("\n")
+	queue.ReverseTraversal(func(ele interface{}) {
+		num := ele.(int)
+		fmt.Printf("num: %d\n", num)
+	}, limit)
+}
+
+func main() {
+
+	queue := CreateSnailQueue(8)
+
+	test_enqueue1(queue)
+	test_enqueue2(queue)
 }
