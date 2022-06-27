@@ -54,10 +54,30 @@ Options:
 `boring_tools/byte_convert`字节转换工具
 
 ```
-Options:
-   <number>		Specify the number of bytes to be converted
-                Example: "./byte_convert 1048576" or "./byte_convert 0x100000"
-   --help		Display this information
+Examples:
+    x@xx boring_tools % ./byte_convert 0x100001
+    1048577 B ≈ 1.0 MB
+    x@xx boring_tools % ./byte_convert 1048576
+    1048576 B = 1.0 MB
+```
+
+## number_convert
+`boring_tools/number_convert`进制转换工具
+
+```
+Examples:
+    x@xx boring_tools % ./number_convert 0xf0F
+    BIN: 1111 0000 1111
+    DEC: 3855
+    HEX: F0F
+    x@xx boring_tools % ./number_convert 0b1011
+    BIN: 1011
+    DEC: 11
+    HEX: B
+    x@xx boring_tools % ./number_convert 2022
+    BIN: 111 1110 0110
+    DEC: 2022
+    HEX: 7E6
 ```
 
 ## dictionary
