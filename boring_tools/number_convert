@@ -1,0 +1,101 @@
+#!/bin/bash
+
+# 用于进制转换的 shell 脚本
+# number system convertor
+input=$1
+dec_num="invalid"
+
+if [ ${#input} -gt 18 ]; then
+    echo "the input is too long and the integer may overflow."
+    exit 1
+fi
+
+if [ $# -lt 1 ]; then
+   input=0
+fi
+
+if [ $input == "--help"  ] || [ $input == "-h"  ]; then
+    echo -e "Options:\n"\
+        "  <number>\t\tSpecify the number to be converted\n"\
+        "\t\t\tExamples:\n"\
+        "\t\t\t\"$0 0xff0f\"\n"\
+        "\t\t\t\"$0 0b10011\"\n"\
+        "  --help\t\tDisplay this information"
+    exit 0
+fi
+
+if [[ $input =~ ^[0-9]*$ ]]
+then # decimal
+    dec_num=$input
+elif [ ${#input} -gt 2 ]
+then
+    prefix=${input:0:2}
+    subfix=${input:2}
+
+    if [[ $prefix == "0x" || $prefix == "0X" ]]
+    then
+        if [[ $subfix =~ ^[0-9a-fA-F]*$ ]]
+        then # hexadecimal
+            #dec_num=`printf "%d" $input`
+            dec_num=$((16#$subfix))
+        fi
+    elif [[ $prefix == "0o" || $prefix == "0O" ]]
+    then
+        if [[ ${input:2} =~ ^[0-7]*$ ]]
+        then # octal
+            dec_num=$((8#$subfix))
+        fi
+    elif [[ $prefix == "0b" || $prefix == "0B" ]]
+    then
+        if [[ ${input:2} =~ ^[0-1]*$ ]]
+        then # binary
+            dec_num=$((2#$subfix))
+        fi
+    fi
+fi
+
+if [[ $dec_num == "invalid" ]]; then
+    echo "invalid input: \"$input\""
+    exit
+fi
+
+# 为提高可读性，对于二进制数，从后往前，每隔四个字符插入一个空格
+# "101011111" > "1 0101 1111"
+function echo_binary_format()
+{
+    bin_str=$1
+    str_len=${#bin_str}
+
+    remain=$[$str_len % 4]
+
+    if [ $remain -gt 0 ]
+    then
+        format_result=${bin_str:0:$remain}
+    fi
+    for ((i = $remain; i < $str_len; i+=4))
+    do
+        if [ $i -eq 0 ] # remain == 0
+        then
+            format_result=${bin_str:$i:4}
+        else
+            # no need to care about the out-of-bounds issues here
+            format_result+=" ${bin_str:$i:4}"
+        fi
+    done
+    echo "BIN:" $format_result
+}
+
+result=`echo "ibase=10; obase=2; $dec_num" | bc`
+echo_binary_format $result
+
+# XXX you don't really care for octal, do you?
+# 不会有人真的关心八进制吧，不会吧
+# result=`echo "ibase=10; obase=8; $dec_num" | bc`
+# echo "OCT:" $result
+
+echo "DEC:" $dec_num
+
+result=`echo "ibase=10; obase=16; $dec_num" | bc`
+echo "HEX:" $result
+
+exit 0

@@ -29,7 +29,7 @@ if [[ $input =~ ^[0-9]*$ ]]; then
     input_num=$input
 elif [[ ${input:2} =~ ^[0-9a-fA-F]*$ ]]; then
 
-    hex_prefix=`echo ${input:0:2}`
+    hex_prefix=${input:0:2}
 
     if [[ $hex_prefix == "0x" || $hex_prefix == "0X" ]]; then
         input_num=`printf "%d" $input`
