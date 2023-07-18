@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/user"
-	"strings"
 )
 
 // redundant backup:
@@ -18,26 +17,32 @@ var g_word = flag.String("w", "", "word 指定要查询的单词")
 var g_external = flag.Bool("e", false, "external 显示外部读音 URL")
 var g_sound = flag.Bool("s", false, "sound 在线获取读音 (need Sox)")
 var g_online = flag.Bool("o", false, "online 获取线上非本地结果")
+var g_interactive = flag.Bool("i", false, "interactive 进入交互词典")
 
-func parse_input_args() bool {
+func parse_input_args(p_conf *Configure) bool {
 
 	if 1 == len(os.Args) {
 		fmt.Printf("missing args, try: %s --help\n", os.Args[0])
 		return false
 	}
-	if flag.Parse(); len(*g_word) < 1 {
+	if flag.Parse(); len(*g_word) < 1 && false == *g_interactive {
 		fmt.Println("missing single word")
 		return false
 	}
+	p_conf.External = *g_external
+	p_conf.Sound = *g_sound
+	p_conf.Online = *g_online
+	p_conf.Interactive = *g_interactive
 	return true
 }
 
 func main() {
 
-	if false == parse_input_args() {
+	var conf Configure
+	if false == parse_input_args(&conf) {
 		return
 	}
-	var db_data, db_path string
+	var db_path string
 
 	if user, err := user.Current(); nil == err {
 		db_path = user.HomeDir + "/.dictionary.sqlite"
@@ -46,24 +51,14 @@ func main() {
 		return
 	}
 	db, err := db_open(db_path)
-
-	if false == *g_online && nil == err {
-		db_data = db_get_word(db, *g_word)
-	}
-	if 0 == len(db_data) {
-		url_prefix := DICT_URL + "?key=" + DICT_KEY + "&w="
-
-		if data, err := online_get_word(url_prefix, *g_word); nil == err {
-
-			if strings.Contains(string(data), "sent") {
-				// example sentence exists, save data to the database
-				db_set_word(db, *g_word, string(data))
-			}
-			presenting_result(data, *g_external, *g_sound)
-		} else {
-			fmt.Printf("%v\n", err)
-		}
+	if err != nil {
+		fmt.Printf("%v\n", err)
 	} else {
-		presenting_result([]byte(db_data), *g_external, *g_sound)
+		defer db.Close()
+	}
+	if false == conf.Interactive {
+		query_and_show(db, conf, *g_word)
+	} else {
+		run_interactive_mode(db, conf)
 	}
 }
