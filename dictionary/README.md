@@ -5,6 +5,7 @@
 ```
 Usage of dictionary:
     -e  external 显示外部读音 URL
+    -i  interactive 进入交互词典
     -o  online 获取线上非本地结果
     -s  sound 在线获取读音 (need sox)
     -w string
