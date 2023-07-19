@@ -1,12 +1,12 @@
 
 ## dictionary
-`dictionary`是一个利用金山词霸接口查询单词的自用小工具. 在线查询结果会保存到 "~/.dictionary.sqlite", 下次查询同一内容直接读数据库, 通常情况此功能意义不大, 但提供了"查过就是我的了!"的爽快感, 同时无视了线上的更新(-o 强制在线查询, 并更新本地内容), 线下同样丰富多彩
+`dictionary`是一个利用金山词霸接口查询单词的小工具。
 
 ```
 Usage of dictionary:
+    -d	database 优先查询本地数据库
     -e  external 显示外部读音 URL
     -i  interactive 进入交互词典
-    -o  online 获取线上非本地结果
     -s  sound 在线获取读音 (need sox)
     -w string
         word 指定要查询的单词

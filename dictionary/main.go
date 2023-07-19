@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
 	"os"
@@ -16,7 +17,7 @@ const DICT_URL string = "http://dict-co.iciba.com/api/dictionary.php"
 var g_word = flag.String("w", "", "word 指定要查询的单词")
 var g_external = flag.Bool("e", false, "external 显示外部读音 URL")
 var g_sound = flag.Bool("s", false, "sound 在线获取读音 (need Sox)")
-var g_online = flag.Bool("o", false, "online 获取线上非本地结果")
+var g_database = flag.Bool("d", false, "database 优先查询本地数据库")
 var g_interactive = flag.Bool("i", false, "interactive 进入交互词典")
 
 func parse_input_args(p_conf *Configure) bool {
@@ -31,7 +32,7 @@ func parse_input_args(p_conf *Configure) bool {
 	}
 	p_conf.External = *g_external
 	p_conf.Sound = *g_sound
-	p_conf.Online = *g_online
+	p_conf.Database = *g_database
 	p_conf.Interactive = *g_interactive
 	return true
 }
@@ -39,22 +40,26 @@ func parse_input_args(p_conf *Configure) bool {
 func main() {
 
 	var conf Configure
+	var db *sql.DB
+
 	if false == parse_input_args(&conf) {
 		return
 	}
-	var db_path string
+	if conf.Database {
+		var db_path string
 
-	if user, err := user.Current(); nil == err {
-		db_path = user.HomeDir + "/.dictionary.sqlite"
-	} else {
-		fmt.Printf("%v\n", err)
-		return
-	}
-	db, err := db_open(db_path)
-	if err != nil {
-		fmt.Printf("%v\n", err)
-	} else {
-		defer db.Close()
+		if user, err := user.Current(); nil == err {
+			db_path = user.HomeDir + "/.dictionary.sqlite"
+		} else {
+			fmt.Printf("%v\n", err)
+			return
+		}
+		if db_res, err := db_open(db_path); err != nil {
+			fmt.Printf("%v\n", err)
+		} else {
+			db = db_res
+			defer db.Close()
+		}
 	}
 	if false == conf.Interactive {
 		query_and_show(db, conf, *g_word)

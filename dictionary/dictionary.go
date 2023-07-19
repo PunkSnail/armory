@@ -17,7 +17,7 @@ import (
 type Configure struct {
 	External    bool
 	Sound       bool
-	Online      bool
+	Database    bool
 	Interactive bool
 }
 
@@ -111,7 +111,7 @@ func query_and_show(db *sql.DB, conf Configure, word string) []byte {
 
 	var db_data string
 	var result []byte
-	if false == conf.Online {
+	if conf.Database {
 		db_data = db_get_word(db, word)
 	}
 	if 0 == len(db_data) {
@@ -119,7 +119,7 @@ func query_and_show(db *sql.DB, conf Configure, word string) []byte {
 
 		if data, err := online_get_word(url_prefix, word); nil == err {
 
-			if strings.Contains(string(data), "sent") {
+			if conf.Database && strings.Contains(string(data), "sent") {
 				// example sentence exists, save data to the database
 				db_set_word(db, word, string(data))
 			}
