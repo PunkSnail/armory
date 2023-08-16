@@ -96,14 +96,20 @@ func presenting_result(data []byte, show_url bool, read bool) {
 
 func play_directly(data []byte) {
 
+	if len(data) == 0 {
+		fmt.Printf("?")
+		return
+	}
 	var dict Dict
-	err := xml.Unmarshal(data, &dict)
-
-	if err == nil && 1 < len(dict.Pron) {
+	if err := xml.Unmarshal(data, &dict); err != nil {
+		fmt.Printf("%v", err)
+		return
+	}
+	if 1 < len(dict.Pron) {
 		fmt.Printf("🔊")
 		shell_cmd("play " + dict.Pron[1])
 	} else {
-		fmt.Printf("%v", err)
+		fmt.Printf("?")
 	}
 }
 
@@ -137,9 +143,9 @@ func query_and_show(db *sql.DB, conf Configure, word string) []byte {
 
 func run_interactive_mode(db *sql.DB, conf Configure) {
 
-	fmt.Println("输入 \"QUIT\" 或 \"q\" 退出。type \"QUIT\" or \"q\" to exit.")
-	fmt.Printf("输入 \"REPEAT\" 或 \"r\" 播放上一个词。%s",
-		"type \"REPEAT\" or \"r\" to play the last word.")
+	fmt.Println("输入 \"q\" 退出。enter \"q\" to quit.")
+	fmt.Printf("输入 \"r\" 播放上一个词。%s",
+		"enter \"r\" to play the previous word.")
 
 	var last_cache []byte
 	reader := bufio.NewReader(os.Stdin)
@@ -152,11 +158,12 @@ read_start:
 		return
 	} else {
 		input = input[:len(input)-1] // delete '\n'
+		input = strings.ToLower(input)
 	}
-	if input == "q" || input == "QUIT" || input == "Q" {
+	if input == "q" {
 		return
 	}
-	if input == "r" || input == "REPEAT" || input == "R" {
+	if input == "r" {
 		play_directly(last_cache)
 	} else {
 		last_cache = query_and_show(db, conf, input)
